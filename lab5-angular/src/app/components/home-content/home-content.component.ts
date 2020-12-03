@@ -157,8 +157,97 @@ export class HomeContentComponent {
       let selectedComponent = (document.getElementById("componentDropdown") as HTMLInputElement).value;
       let courseId = (document.getElementById("courseNumber") as HTMLInputElement).value;
       let subjectInput = (document.getElementById("subjectDropDown") as HTMLInputElement).value;  
+      let subjCourseKeywords = (document.getElementById("subj-course-keyword") as HTMLInputElement).value;
+      let keywords = (document.getElementById("keywords") as HTMLInputElement).value;
 
-    // validate that input requirements are fulfilled 
+    // check if any keywords entered, if so prioritize them first
+      if(keywords != undefined && subjCourseKeywords != " " && subjCourseKeywords != null){
+
+        if(keywords.length < 4){
+          alert("Search by keywords must have at least 4 characters")
+          this.data = matchingCourses; 
+          return;
+        }
+        let keywordsArray = keywords.split(" ");
+        console.log(keywordsArray);
+
+        // loop through and search all courses for matching keywords
+        for(let keyword of keywordsArray){
+            courseloop: for(let course of courseData){
+              for(let property of Object.keys(course)){
+                
+                if(property == "course_info"){
+        
+                  for(let subProperty of Object.keys(course["course_info"][0])){  //not why tf does it break without object.keys
+                    
+                    if(course["course_info"][0][subProperty].toString().includes(keyword)){
+                      console.log("Match:" + subProperty + " " + keyword);
+                      matchingCourses.push(course);
+                      continue courseloop;
+                    }
+                  }
+                }else if(course[property].toString().includes(keyword)){ // if not course_ info
+                  console.log("Match:" + property + " " + keyword);
+                  matchingCourses.push(course);
+                  continue courseloop;
+                }
+              }
+            }
+        }
+        console.log("keyword search provided, overriding other searches");
+          this.data = matchingCourses; 
+          
+          if(matchingCourses.length == 0){
+            alert("No courses match inputted search fields");
+          }
+          return;
+      }
+
+    // next check if check if subject/ course code keywords entered, prioritize them next
+    
+      if(subjCourseKeywords != undefined && subjCourseKeywords != " " && subjCourseKeywords != null){
+        let keywordsArray2 = subjCourseKeywords.split(" ");
+        
+        for(let course of courseData){
+          for(let keyword of keywordsArray2){
+            
+            // check if first letter of string is number if so we know it is a course code
+            if(this.isNumber(keyword[0])){
+
+              // check if letter is specified at the end
+                if(!this.isNumber(keyword[keyword.length -1])){
+                  console.log("last value NOT number");
+                  
+                  // create new string with uppercase letter
+                  let newString;
+                  newString = keyword.substring(0, keyword.length -1) + keyword.substring(keyword.length -1).toUpperCase();
+                  console.log("NEW STRING: "+ newString)
+
+                  // check data for match
+                  if(course["catalog_nbr"] == newString){
+                    matchingCourses.push(course);
+                    console.log(course["catalog_nbr"] + " added to search results");
+                  }
+                }else{
+                  alert("A component suffix must be included in course codes (ex. 3316b or 3316B instead of 3316");
+                  return;
+                }
+            }else if(course["subject"] == keyword){ // if not a course code, it must be a subject, so compare to course subject
+              matchingCourses.push(course);
+              console.log(course["catalog_nbr"] + " added to search results");
+            }
+          }
+        }
+        console.log("subject and/or course code keyword search provided, overriding other searches");
+        this.data = matchingCourses; 
+        
+        if(matchingCourses.length == 0){
+          alert("No courses match inputted search fields");
+        }
+        return;
+      }
+
+    /* validate that input requirements are fulfilled 
       
       if(subjectInput == ""){
         alert("Please select a specific subject to search");
@@ -167,6 +256,7 @@ export class HomeContentComponent {
       if(!courseId){
         alert("A course ID must be inputted to search");
       }
+    */
 
     // more input validation
       
@@ -214,6 +304,15 @@ export class HomeContentComponent {
 
     // pass data to data member to be rendered in table
       this.data = matchingCourses;  
+  }
+
+  isNumber(str: string): boolean{
+    if(str == "1" || str == "2" ||str == "3" ||str == "4" ||str == "5" ||str == "6" ||str == "7" ||str == "8" ||str == "9"){
+      return true;
+    }
+    else{
+      return false;
+    }
   }
 
   searchSubmitted(){
@@ -425,18 +524,14 @@ export class HomeContentComponent {
 
       for(let element in this.data){
         if(courseNum == this.data[element]["catalog_nbr"]){
-          console.log("show more info set to false");
           this.data[element]["showMoreInfo"] = false;
-          console.log(this.data);
         }
       }
     }else{
     
       for(let element in this.data){
         if(courseNum == this.data[element]["catalog_nbr"]){
-          console.log("show more info set to true");
           this.data[element]["showMoreInfo"] = true;
-          console.log(this.data);
         } 
       }
     }
