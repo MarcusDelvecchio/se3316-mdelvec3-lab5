@@ -5,7 +5,12 @@
       <app-main-nav></app-main-nav>
       <div class="navbar-nav ml-auto">
         <app-login-button *ngIf="(auth.isAuthenticated$ | async) === false">
+          <!--auth.isAuthenticated$ | async is an observable that the auth service provides that will be true or false whether we are logged in -->
         </app-login-button>
+
+        <app-logout-button *ngIf="auth.isAuthenticated$ | async">
+        </app-logout-button>
+        
       </div>
     </div>
   </nav>

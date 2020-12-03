@@ -5,6 +5,6 @@ export const environment = {
   auth: {
     domain,
     clientId,
-    redirectUri: window.location.origin,
+    redirectUri: window.location.origin,  //tell application where to send the user after they login. this value is just the place they were before
   },
 };
