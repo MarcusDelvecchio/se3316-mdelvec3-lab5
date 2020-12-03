@@ -135,6 +135,7 @@ export class HomeContentComponent {
   scheduleData: any = {};
   timeBasedSchedule;
   dataArray;
+  newScheduleEnabled; // when the users clicks the button to create new schedule, fields to do so are shown
 
   constructor(private _configservice:ConfigService){
     this.showInfoTable = false;
@@ -145,6 +146,7 @@ export class HomeContentComponent {
     this.timeBasedSchedule = {"8:30 AM": {},"9:30 AM": {},"10:30 AM": {},"11:30 AM": {},"12:30 PM": {},"1:30 PM": {},"2:30 PM": {},"3:30 PM": {},"4:30 PM": {},"5:30 PM": {},"6:30 PM": {},"7:30 PM": {},"8:30 PM": {},"9:30 PM": {}};
     this.renderedSchedule = "";
     this.dataArray = [];
+    this.newScheduleEnabled = false;
   }
 
   getData(){
@@ -379,7 +381,7 @@ export class HomeContentComponent {
   }
 
   scheduleSelected(scheduleName: string){
-  
+    
     let name = scheduleName;
     try{
       this.activeSchedule = this.scheduleData[name];
@@ -557,4 +559,21 @@ export class HomeContentComponent {
         }
       }
     };
+
+  // display fields to create new scedule
+  toggleNewScheduleFields(){
+    if(this.newScheduleEnabled){
+      this.newScheduleEnabled =  false;
+    }else{
+      this.newScheduleEnabled = true;
+    }
+  }
 }
+
+/* course list format :
+
+scheduleName: [ { COURSEOBJ1 }, { COURSEOBJ2 }, {COURSEOBJ3}]
+// just an array of course objects^
+
+*/
+

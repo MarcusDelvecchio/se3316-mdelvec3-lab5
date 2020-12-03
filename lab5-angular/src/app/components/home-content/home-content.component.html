@@ -188,9 +188,14 @@
       </td>
 
       <td class="controlColumn">
-        <h2>Create a Schedule</h2>
-        <div name="scheduleCreateSection" id="subjectSelection">
-          <input id ="scheduleName" type="text" [(ngModel)]='scheduleNameInput' placeholder="morning classes">   
+        <h2>New Schedule</h2>
+        <button type="submit" class="btn btn-info span2" autofocus="" (click)="toggleNewScheduleFields()"><ng-container *ngIf="!newScheduleEnabled">New Schedule</ng-container><ng-container *ngIf="newScheduleEnabled">Cancel</ng-container></button>
+        <br> 
+        <div *ngIf="newScheduleEnabled" name="scheduleCreateSection" id="subjectSelection">
+          <form>
+            Schedule Name<input id ="scheduleName" type="text" [(ngModel)]='scheduleNameInput' placeholder="morning classes">   
+            Description<textarea id ="scheduleDescription"></textarea>
+          </form>
           <div class="submit">
             <button type="submit" class="btn btn-info span2" autofocus="" (click)="createSchedule()">Create Schedule</button> 
           </div>
@@ -258,29 +263,69 @@
  </div> 
 
     <hr />
+    <!-- COURSE LIST SECTION -->
+
+      <h2>Course Lists</h2>
+      <table>
+        <tr>
+          <td>Name</td>
+          <td>Creator</td>
+          <td>Modified Date</td>
+          <td>Number of Courses</td>
+        </tr>
+
+        <!-- Render two rows for each course list (one hidden until expanded) -->
+        <ng-container *ngFor="let courseList of scheduleData; let i=index">
+          <tr>
+            <td>{{ Object.keys(scheduleData)[i] }}</td> 
+            <td>{{ scheduleData[i].creator }} </td> 
+            <td>{{ scheduleData[i].modified }} </td> 
+            <td>{{ scheduleData[i].length }} </td> 
+          </tr>
+
+          <!-- hideen row-->
+            <tr class="infoTableTr" *ngIf="courseList['epanded']">
+              <!-- show more info if table item clicked-->
+              <td colspan="4">
+                About {{ Object.keys(scheduleData)[i] }} <br>
+                Description<br>
+                {{ scheduleData[i].description }} <br>
+                Courses:
+                <ul>
+                  <li *ngFor="let course of courseList">
+                    {{ courseList["subject"] }} {{ courseList["catalog_nbr"] }} 
+                  </li>
+                </ul>
+              </td>
+            </tr>
+        </ng-container>
+
+      </table>
+
+    <hr />
 
     <!-- TIME TABLE SECTION -->
 
-    <div id="timeTableContainer" *ngIf="showTimeTable" >
+      <div id="timeTableContainer" *ngIf="showTimeTable" >
 
-      <h2>Time Table: {{ renderedSchedule }}</h2>
-      <br/>
+        <h2>Time Table: {{ renderedSchedule }}</h2>
+        <br/>
 
-      <table class="timeTable">
-        <!-- HEADER ROW -->
-        <tr class="timeTableTr">
-          <td class="timetableTimeTd"><!-- empty --></td>
-          <td *ngFor="let day of days | keyvalue: keepOrder" class="timeTableDayTr">
-            {{day.key}}
-          </td>
-        </tr>
+        <table class="timeTable">
+          <!-- HEADER ROW -->
+          <tr class="timeTableTr">
+            <td class="timetableTimeTd"><!-- empty --></td>
+            <td *ngFor="let day of days | keyvalue: keepOrder" class="timeTableDayTr">
+              {{day.key}}
+            </td>
+          </tr>
 
-        <!-- OTHER ROWS -->
-        <tr timeTableTr *ngFor="let time of times">
-          <td class="timetableTimeTd">{{ time }}</td> 
-          <td *ngFor="let day of days | keyvalue: keepOrder" class="timeTableTd" >{{ timeBasedSchedule[time][day.key] }}</td>
-        </tr>
+          <!-- OTHER ROWS -->
+          <tr timeTableTr *ngFor="let time of times">
+            <td class="timetableTimeTd">{{ time }}</td> 
+            <td *ngFor="let day of days | keyvalue: keepOrder" class="timeTableTd" >{{ timeBasedSchedule[time][day.key] }}</td>
+          </tr>
 
-      </table>
-    </div> <!--render time table here -->
+        </table>
+      </div> <!--render time table here -->
 </div>
