@@ -20,6 +20,7 @@ import { LoginButtonComponent } from './components/login-button/login-button.com
 import { LogoutButtonComponent } from './components/logout-button/logout-button.component';
 
 import { ConfigService } from './components/home-content/home-content.component';
+import { FormsModule } from '@angular/forms'; 
 
 @NgModule({
   declarations: [
@@ -40,6 +41,7 @@ import { ConfigService } from './components/home-content/home-content.component'
     AppRoutingModule,
     HttpClientModule,
     FontAwesomeModule,
+    FormsModule,
     AuthModule.forRoot({
       ...env.auth,
     }),

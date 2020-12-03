@@ -1,0 +1,141 @@
+/* You can add global styles to this file, and also import other style files */
+.westernInformation { 
+	background-color : lightblue;
+	font-family : sans-serif;
+	text-decoration-color: grey;
+ }
+
+ .controlColumn{
+	width: 25%;
+	border-collapse: collapse;
+	text-align: top;
+	padding-top: 0;
+	border-top: 0;
+ }
+
+ .scheduleSelectContainer{
+ 	width: 65%;
+ }
+
+.submit{
+	margin-top: 15px;
+}
+.submitButton {
+	background-color : darkblue;
+	width: 100%;
+	border: none;
+	padding: 9px 20px;
+	font-size: 16px;
+	cursor: pointer;
+	text-align: center;
+}
+
+.required-field::after {
+	content: "*";
+	color: red;
+}
+
+.lineDivider{
+	background-color: black;
+	height: 2px;
+	width: 100%;
+}
+
+.link {
+	text-decoration: none;
+}
+
+.searchSection {
+	font-size: 40px;
+	text-decoration-color: grey;
+ }
+
+.padEntireBody {
+	max-width:1500px;
+	border:2px solid #000000;
+	padding:1rem;
+	margin:1rem auto; 
+	margin-right: 0;
+	margin-left: 0;
+}
+
+ .boldentext {
+ 	font-weight: bold;
+ }
+ 
+ .timeTable{
+	width: 100%;
+	border-collapse: collapse;
+	border-spacing: 0;
+	table-layout: fixed;
+	margin-left:auto; 
+	margin-right:auto;
+	border: 1px solid black; 
+ }
+
+ 
+.timeTableTd{
+	border: 1px solid black; 
+	/* table-layout: fixed; */
+	text-align: center;
+	font-size: small;
+	width: 19%;
+}
+
+.timetableTimeTd{
+	border: 1px solid black; 
+	/*table-layout: fixed;*/
+	text-align: left;
+	font-size: small;
+	width: 5%;
+}
+
+.timeTableDayTr{
+	border: 1px solid black; 
+	/* table-layout: fixed; */
+	text-align: center;
+	font-size: small;
+	height: 10%;
+}
+
+.timeTableTr{
+	border: 1px solid black; 
+	/* table-layout: fixed; */
+	text-align: center;
+	font-size: small;
+	height: 18%;
+}
+
+.infoTable{
+    /*table-layout: fixed;*/
+    border: 1px solid black; 
+    /*border-collapse: separate;  the default option */
+    border-spacing: 0;
+}
+
+.infoTableTd{
+    width: 16%;
+    border: 1px solid black;
+}
+
+.infoTableTd-smaller{
+    width: 10%;
+    border: 1px solid black;
+}
+
+.infoTableTr{
+    border: 1px solid black; 
+}
+
+.infoTableHeaderTr{
+    border: 1px solid black;
+    background-color: lightgrey; 
+}
+
+.infoTableMoreInfoTd{
+    column-span: 7;
+    /*border: 1px solid black;*/
+}
+
+
+

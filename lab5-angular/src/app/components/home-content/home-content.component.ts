@@ -26,13 +26,94 @@ export class ConfigService {
 @Component({
   selector: 'app-home-content',
   templateUrl: './home-content.component.html',
-  styleUrls: ['./home-content.component.css']
+  styleUrls: ['../componentStyles.css']
 })
 export class HomeContentComponent {
 
   ngOnInit(){
     console.log("on init called");
-    this._configservice.getcourses().subscribe(data => this.dataArray = data);
+    // removed until connecting to db
+    //this._configservice.getcourses().subscribe(data => this.dataArray = data);
+    this.dataArray = [
+      {
+        "catalog_nbr": "1021B",
+        "subject": "ACTURSCI",
+        "className": "INTRO TO FINANCIAL SECURE SYS",
+        "course_info": [
+          {
+            "class_nbr": 5538,
+            "start_time": "8:30 AM",
+            "descrlong": "",
+            "end_time": "9:30 AM",
+            "campus": "Main",
+            "facility_ID": "PAB-106",
+            "days": [
+              "M",
+              "W",
+              "F"
+            ],
+            "instructors": [],
+            "class_section": "001",
+            "ssr_component": "LEC",
+            "enrl_stat": "Not full",
+            "descr": "RESTRICTED TO YR 1 STUDENTS."
+          }
+        ],
+        "catalog_description": "The nature and cause of financial security and insecurity; public, private and employer programs and products to reduce financial insecurity, including social security, individual insurance and annuities along with employee pensions and benefits.\n\nExtra Information: 3 lecture hours."
+      },
+      {
+        "catalog_nbr": 2053,
+        "subject": "ACTURSCI",
+        "className": "MATH FOR FINANCIAL ANALYSIS",
+        "course_info": [
+          {
+            "class_nbr": 1592,
+            "start_time": "11:30 AM",
+            "descrlong": "Prerequisite(s):1.0 course or two 0.5 courses at the 1000 level or higher from Applied Mathematics, Calculus, or Mathematics.",
+            "end_time": "12:30 PM",
+            "campus": "Main",
+            "facility_ID": "NCB-113",
+            "days": [
+              "M",
+              "W",
+              "F"
+            ],
+            "instructors": [],
+            "class_section": "001",
+            "ssr_component": "LEC",
+            "enrl_stat": "Full",
+            "descr": ""
+          }
+        ],
+        "catalog_description": "Simple and compound interest, annuities, amortization, sinking funds, bonds, bond duration, depreciation, capital budgeting, probability, mortality tables, life annuities, life insurance, net premiums and expenses. Cannot be taken for credit in any module in Statistics or Actuarial Science, Financial Modelling or Statistics, other than the minor in Applied Financial Modeling.\n\nAntirequisite(s): Actuarial Science 2553A/B.\n\nExtra Information: 3 lecture hours."
+      },
+      {
+        "catalog_nbr": "2427B",
+        "subject": "ACTURSCI",
+        "className": "LONG TERM ACTUARIAL MATH I",
+        "course_info": [
+          {
+            "class_nbr": 2663,
+            "start_time": "12:30 PM",
+            "descrlong": "Prerequisite(s): A minimum mark of 60% in each of Actuarial Science 2553A/B, either Calculus 2402A/B or Calculus 2502A/B, and Statistical Sciences 2857A/B. Restricted to students enrolled in any Actuarial Science module.",
+            "end_time": "1:30 PM",
+            "campus": "Main",
+            "facility_ID": "MC-105B",
+            "days": [
+              "M",
+              "W",
+              "F"
+            ],
+            "instructors": [],
+            "class_section": "001",
+            "ssr_component": "LEC",
+            "enrl_stat": "Not full",
+            "descr": ""
+          }
+        ],
+        "catalog_description": "Models for the time until death, single life annuity and life insurance present values and their probability distributions; introduction to equivalence principle and premium calculations.\n\nExtra Information: 3 lecture hours, 1 tutorial hour."
+      },
+    ];
   };
 
   faLink = faLink;
@@ -44,7 +125,7 @@ export class HomeContentComponent {
   showInfoTable = false; // info table is rendered only when this is true
   showTimeTable = false; // time table is rendered only when this is true
   renderedSchedule;
-  columnLabels = ["Course Number", "Subject", "Class Name", "Description", "Selected"]; //todo add course_info columns
+  columnLabels = ["Subject", "Course Number", "Class Name", "Section", "Component", "Class Times"]; //todo add course_info columns
   data: { [key: string]: any } = {};
   checked: boolean[] = [];
   objectKeys = Object.keys;
@@ -335,6 +416,30 @@ export class HomeContentComponent {
 
   keepOrder = (a, b) => {
     return a;
+  }
+
+  showMoreCourseInfo(course: any){
+    let courseNum = course["catalog_nbr"];
+
+    if(course.showMoreInfo){
+
+      for(let element in this.data){
+        if(courseNum == this.data[element]["catalog_nbr"]){
+          console.log("show more info set to false");
+          this.data[element]["showMoreInfo"] = false;
+          console.log(this.data);
+        }
+      }
+    }else{
+    
+      for(let element in this.data){
+        if(courseNum == this.data[element]["catalog_nbr"]){
+          console.log("show more info set to true");
+          this.data[element]["showMoreInfo"] = true;
+          console.log(this.data);
+        } 
+      }
+    }
   }
 
   // returns true if the passed string contains only characters, numbers, spaces and underscores
