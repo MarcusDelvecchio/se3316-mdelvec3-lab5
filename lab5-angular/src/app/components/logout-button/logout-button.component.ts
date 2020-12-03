@@ -1,26 +1,21 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { AuthService } from '@auth0/auth0-angular';
 import { DOCUMENT } from '@angular/common';
+import { AuthService } from '@auth0/auth0-angular';
 
 @Component({
   selector: 'app-logout-button',
   templateUrl: './logout-button.component.html',
-  styles: [
-  ]
+  styles: [],
 })
 export class LogoutButtonComponent implements OnInit {
-
   constructor(
     public auth: AuthService,
     @Inject(DOCUMENT) private doc: Document
   ) {}
 
-  ngOnInit(): void {
-  }
+  ngOnInit(): void {}
 
   logout(): void {
     this.auth.logout({ returnTo: this.doc.location.origin });
-    // returnTo value is the place we return to when we logout, so we use
   }
-
 }

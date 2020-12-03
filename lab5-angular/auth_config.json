@@ -1,6 +1,6 @@
 {
-  "domain": "dev-o5r3o-bk.us.auth0.com",
-  "clientId": "KSuehjqNQdccWFeNWEiUvSEx9B7TgglL",
+  "domain": "dev-lrzuaei7.us.auth0.com",
+  "clientId": "GXRiFyWhG56vQm3aaY6Z98Ru4UUj6VZd",
   "audience": "http://your-audience-identifier",
   "apiUrl": "http://localhost:7000"
 }
