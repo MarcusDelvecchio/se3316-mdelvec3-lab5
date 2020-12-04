@@ -138,5 +138,20 @@
     /*border: 1px solid black;*/
 }
 
+.courseListTable{
+    border: 1px solid black; 
+    border-spacing: 0;
+}
+
+.courseListTableHeaderRow{
+	border: 1px solid black;
+    background-color: lightgrey; 
+}
+
+.courseListTableTd{
+    width: 20%;
+    border: 1px solid black;
+}
+
 
 

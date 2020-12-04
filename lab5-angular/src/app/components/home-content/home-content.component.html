@@ -193,7 +193,7 @@
         <br> 
         <div *ngIf="newScheduleEnabled" name="scheduleCreateSection" id="subjectSelection">
           <form>
-            Schedule Name<input id ="scheduleName" type="text" [(ngModel)]='scheduleNameInput' placeholder="morning classes">   
+            Schedule Name<input id ="scheduleName" type="text" [(ngModel)]='scheduleNameInput' [ngModelOptions]="{standalone: true}" placeholder="morning classes">   
             Description<textarea id ="scheduleDescription"></textarea>
           </form>
           <div class="submit">
@@ -263,11 +263,12 @@
  </div> 
 
     <hr />
+
     <!-- COURSE LIST SECTION -->
 
       <h2>Course Lists</h2>
-      <table>
-        <tr>
+      <table class="courseListTable">
+        <tr class="courseListTableHeaderRow">
           <td>Name</td>
           <td>Creator</td>
           <td>Modified Date</td>
@@ -275,25 +276,24 @@
         </tr>
 
         <!-- Render two rows for each course list (one hidden until expanded) -->
-        <ng-container *ngFor="let courseList of scheduleData; let i=index">
+        <ng-container *ngFor="let courseList of scheduleDataInfo| keyvalue; let i=index">
           <tr>
-            <td>{{ Object.keys(scheduleData)[i] }}</td> 
-            <td>{{ scheduleData[i].creator }} </td> 
-            <td>{{ scheduleData[i].modified }} </td> 
-            <td>{{ scheduleData[i].length }} </td> 
+            <td (click)="showMoreCourseListInfo(courseList.key)" class="courseListTableTd" >{{ courseList.key }}</td> 
+            <td (click)="showMoreCourseListInfo(courseList.key)" class="courseListTableTd" >{{ scheduleDataInfo[courseList.key].creator }} </td> 
+            <td (click)="showMoreCourseListInfo(courseList.key)" class="courseListTableTd" >{{ scheduleDataInfo[courseList.key].modified }} </td> 
+            <td (click)="showMoreCourseListInfo(courseList.key)" class="courseListTableTd" >{{ scheduleDataInfo[courseList.key].length }} </td> 
           </tr>
 
-          <!-- hideen row-->
-            <tr class="infoTableTr" *ngIf="courseList['epanded']">
-              <!-- show more info if table item clicked-->
-              <td colspan="4">
-                About {{ Object.keys(scheduleData)[i] }} <br>
-                Description<br>
-                {{ scheduleData[i].description }} <br>
+          
+            <tr class="infoTableTr" *ngIf="scheduleDataInfo[courseList.key].expanded">
+              
+              <td colspan="5">
+                About {{ courseList.key }} <br>
+                Description: {{ scheduleDataInfo[courseList.key].description }} <br>
                 Courses:
                 <ul>
-                  <li *ngFor="let course of courseList">
-                    {{ courseList["subject"] }} {{ courseList["catalog_nbr"] }} 
+                  <li *ngFor="let course of ScheduleData[courseList.key]"> <!-- i think this is breaking bc the hard coded courses in scheduleDataInfo dont match those in scheduleData but it will work later-->
+                    {{ course["subject"] }} {{ course["catalog_nbr"] }} 
                   </li>
                 </ul>
               </td>

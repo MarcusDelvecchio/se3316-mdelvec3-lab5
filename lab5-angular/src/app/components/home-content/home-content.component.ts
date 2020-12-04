@@ -136,7 +136,8 @@ export class HomeContentComponent {
   timeBasedSchedule;
   dataArray;
   newScheduleEnabled; // when the users clicks the button to create new schedule, fields to do so are shown
-
+  scheduleDataInfo; // info object correspondiong to the ScheduleData object with info for each schedule. Format is = { schedule1: { creator: "", modified: "", length: undefined, description: "", }, schedule2: { ... }, ... }
+  
   constructor(private _configservice:ConfigService){
     this.showInfoTable = false;
     this.showTimeTable = false;
@@ -146,7 +147,8 @@ export class HomeContentComponent {
     this.timeBasedSchedule = {"8:30 AM": {},"9:30 AM": {},"10:30 AM": {},"11:30 AM": {},"12:30 PM": {},"1:30 PM": {},"2:30 PM": {},"3:30 PM": {},"4:30 PM": {},"5:30 PM": {},"6:30 PM": {},"7:30 PM": {},"8:30 PM": {},"9:30 PM": {}};
     this.renderedSchedule = "";
     this.dataArray = [];
-    this.newScheduleEnabled = false;
+    this.newScheduleEnabled = false;""
+    this.scheduleDataInfo = {test1: { creator: "Marcus", modified: "2020-12-3", length: undefined, description: "some description" }};
   }
 
   getData(){
@@ -337,6 +339,7 @@ export class HomeContentComponent {
 
   createSchedule(){
     let name: string = this.scheduleNameInput;
+    let description: string = (document.getElementById("scheduleDescription") as HTMLInputElement).value;
     
     if(!this.scheduleNameInput){
       alert("Error: schedule name empty");
@@ -349,9 +352,15 @@ export class HomeContentComponent {
     else{
       console.log("schedule " + name + " created");
       this.scheduleData[name] = {};
+
+      // todo get modified date and creator from user
+      // todo saitize description?
+      this.scheduleDataInfo[name] = {creator: "", modified: "", length: undefined, description: description, expanded: false}
       console.log(this.scheduleData);
+      console.log(this.scheduleDataInfo);
     }
     this.scheduleNameInput = "";
+    this.newScheduleEnabled =  false; // hide the create schedule options again
   }
 
   courseSelected(course: object){ 
@@ -568,6 +577,17 @@ export class HomeContentComponent {
       this.newScheduleEnabled = true;
     }
   }
+
+  showMoreCourseListInfo(listName: string){
+    let name = listName;
+
+    if(this.scheduleDataInfo[name].expanded){
+      this.scheduleDataInfo[name].expanded = false;
+    }else{
+      this.scheduleDataInfo[name].expanded = true;
+    }
+  }
+  
 }
 
 /* course list format :
