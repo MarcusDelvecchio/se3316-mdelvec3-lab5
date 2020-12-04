@@ -129,7 +129,7 @@ export class HomeContentComponent {
   checked: boolean[] = [];
   objectKeys = Object.keys;
   activeSchedule: object[] = []; // giving errors
-  actvieScheduleName: string;
+  activeScheduleName: string;
   selectedCourses: object[] = []; // array of SELECTED courses (full data)
   scheduleData: any = {};
   timeBasedSchedule;
@@ -142,7 +142,7 @@ export class HomeContentComponent {
     this.showTimeTable = false;
     this.checked = [];
     this.scheduleNameInput = "";
-    this.actvieScheduleName = "";
+    this.activeScheduleName = "";
     this.timeBasedSchedule = {"8:30 AM": {},"9:30 AM": {},"10:30 AM": {},"11:30 AM": {},"12:30 PM": {},"1:30 PM": {},"2:30 PM": {},"3:30 PM": {},"4:30 PM": {},"5:30 PM": {},"6:30 PM": {},"7:30 PM": {},"8:30 PM": {},"9:30 PM": {}};
     this.renderedSchedule = "";
     this.dataArray = [];
@@ -392,7 +392,7 @@ export class HomeContentComponent {
     let name = scheduleName;
     try{
       this.activeSchedule = this.scheduleData[name];
-      this.actvieScheduleName = name;
+      this.activeScheduleName = name;
       //console.log("Active schedule changed to " + name);
     }catch(error){
       console.log("Something went wrong; schedule name cannot be found in data");
@@ -401,12 +401,12 @@ export class HomeContentComponent {
 
   addCoursesToSchedule(){
     
-    if(this.actvieScheduleName == null || this.actvieScheduleName == "" || this.actvieScheduleName == undefined){
+    if(this.activeScheduleName == null || this.activeScheduleName == "" || this.activeScheduleName == undefined){
       alert("Please select a schedule to add courses to it.")
       return;
     }
     let activeSchedule = this.activeSchedule;
-    let name = this.actvieScheduleName;
+    let name = this.activeScheduleName;
 
     this.scheduleData[name] = this.selectedCourses;
     console.log(this.scheduleData);
@@ -433,7 +433,7 @@ export class HomeContentComponent {
       return;
     }*/
 
-    this.renderedSchedule = this.actvieScheduleName;
+    this.renderedSchedule = this.activeScheduleName;
     /*convert activeSchedule (array of objects) to organized object of format:
     timeBasedSchedule = {
       "8:30 AM": { monday: COURSE_NAME1, tuesday: COURSE_NAME2, wednesday: {}, ...}
@@ -592,8 +592,19 @@ export class HomeContentComponent {
     console.log(this.scheduleData);
     this.activeSchedule = this.scheduleData[name];
     console.log(this.activeSchedule);
-    this.actvieScheduleName = name;
+    this.activeScheduleName = name;
     this.renderTimeTable();
+  }
+
+  deleteCourseList(name:string){
+    console.log(name);
+    delete this.scheduleData[name];
+    delete this.scheduleDataInfo[name];
+    this.activeSchedule = undefined;
+    this.showTimeTable = false;
+    console.log(this.scheduleData);
+
+    //todo write to database to delete
   }
   
 }

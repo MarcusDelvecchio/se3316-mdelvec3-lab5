@@ -313,7 +313,14 @@
 
       <div id="timeTableContainer" *ngIf="showTimeTable" >
 
-        <h2>Time Table: {{ renderedSchedule }}</h2>
+        <table>
+          <tr>
+            <td><h2>Time Table: {{ renderedSchedule }}</h2></td>
+            <td>
+              <button type="submit" class="btn btn-info span2" autofocus="" (click)="deleteCourseList(activeScheduleName)">Delete {{ renderedSchedule }}</button>
+            </td>
+          </tr>
+        </table>
         <br/>
 
         <table class="timeTable">
