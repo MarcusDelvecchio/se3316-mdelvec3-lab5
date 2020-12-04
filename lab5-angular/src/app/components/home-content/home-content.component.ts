@@ -4,7 +4,7 @@ import { courseObject } from './courseInterface'
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { faLink } from '@fortawesome/free-solid-svg-icons';
-
+import { AuthService } from '@auth0/auth0-angular';
 
 @Injectable()
 export class ConfigService {
@@ -118,7 +118,6 @@ export class HomeContentComponent {
 
   faLink = faLink;
 
-  title = 'lab4-angular';
   show = true;
   checkboxValue: boolean = false;
   scheduleNameInput: string; // initalizing to "" will cause errors: schedules will never have names
@@ -138,7 +137,7 @@ export class HomeContentComponent {
   newScheduleEnabled; // when the users clicks the button to create new schedule, fields to do so are shown
   scheduleDataInfo; // info object correspondiong to the ScheduleData object with info for each schedule. Format is = { schedule1: { creator: "", modified: "", length: undefined, description: "", }, schedule2: { ... }, ... }
   
-  constructor(private _configservice:ConfigService){
+  constructor(private _configservice:ConfigService, public auth: AuthService){
     this.showInfoTable = false;
     this.showTimeTable = false;
     this.checked = [];
@@ -148,7 +147,7 @@ export class HomeContentComponent {
     this.renderedSchedule = "";
     this.dataArray = [];
     this.newScheduleEnabled = false;""
-    this.scheduleDataInfo = {test1: { creator: "Marcus", modified: "2020-12-3", length: undefined, description: "some description" }};
+    this.scheduleDataInfo = {};// note was using this for testing cuz it breaks cuz its not in the scheduleData object but you CAN use it for testing{test1: { creator: "Marcus", modified: "2020-12-3", length: undefined, description: "some description", visiblity: "Private" }};
   }
 
   getData(){
@@ -340,6 +339,7 @@ export class HomeContentComponent {
   createSchedule(){
     let name: string = this.scheduleNameInput;
     let description: string = (document.getElementById("scheduleDescription") as HTMLInputElement).value;
+    let visiblity: string = (document.getElementById("visibilityDropDown") as HTMLInputElement).value;
     
     if(!this.scheduleNameInput){
       alert("Error: schedule name empty");
@@ -355,9 +355,7 @@ export class HomeContentComponent {
 
       // todo get modified date and creator from user
       // todo saitize description?
-      this.scheduleDataInfo[name] = {creator: "", modified: "", length: undefined, description: description, expanded: false}
-      console.log(this.scheduleData);
-      console.log(this.scheduleDataInfo);
+      this.scheduleDataInfo[name] = {creator: "", modified: "", length: undefined, description: description, expanded: false, visibility: visiblity};
     }
     this.scheduleNameInput = "";
     this.newScheduleEnabled =  false; // hide the create schedule options again
@@ -424,15 +422,16 @@ export class HomeContentComponent {
 
   renderTimeTable(){
 
-    if((document.getElementById("scheduleDropDown") as HTMLInputElement).value == "none"){
+    // removed bc active schedule drop down no longer the method to render schedules/ course lists
+    /*if((document.getElementById("scheduleDropDown") as HTMLInputElement).value == "none"){
       alert("You must choose an active schedule to render a time table");
       return;
-    }
+    }*/
 
-    if(this.activeSchedule.length == 0){
+    /*if(this.activeSchedule.length == 0){
       alert("Cannot render an empty schedule");
       return;
-    }
+    }*/
 
     this.renderedSchedule = this.actvieScheduleName;
     /*convert activeSchedule (array of objects) to organized object of format:
@@ -521,7 +520,7 @@ export class HomeContentComponent {
 
     this.showTimeTable = true;
     this.timeBasedSchedule = organizedSchedule;
-    console.log(this.timeBasedSchedule);
+    //console.log(this.timeBasedSchedule);
   }
 
   keepOrder = (a, b) => {
@@ -586,6 +585,15 @@ export class HomeContentComponent {
     }else{
       this.scheduleDataInfo[name].expanded = true;
     }
+  }
+
+  courseListSelected(name: string){
+    console.log("schedule name passed:" + name);
+    console.log(this.scheduleData);
+    this.activeSchedule = this.scheduleData[name];
+    console.log(this.activeSchedule);
+    this.actvieScheduleName = name;
+    this.renderTimeTable();
   }
   
 }

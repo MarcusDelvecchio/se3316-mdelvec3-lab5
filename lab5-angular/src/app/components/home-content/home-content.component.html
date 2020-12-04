@@ -187,7 +187,7 @@
           </div>
       </td>
 
-      <td class="controlColumn">
+      <td class="controlColumn" *ngIf="auth.isAuthenticated$ | async">
         <h2>New Schedule</h2>
         <button type="submit" class="btn btn-info span2" autofocus="" (click)="toggleNewScheduleFields()"><ng-container *ngIf="!newScheduleEnabled">New Schedule</ng-container><ng-container *ngIf="newScheduleEnabled">Cancel</ng-container></button>
         <br> 
@@ -195,6 +195,11 @@
           <form>
             Schedule Name<input id ="scheduleName" type="text" [(ngModel)]='scheduleNameInput' [ngModelOptions]="{standalone: true}" placeholder="morning classes">   
             Description<textarea id ="scheduleDescription"></textarea>
+            Visibility
+            <select id="visibilityDropDown">
+              <option>Public</option>
+              <option selected="selected">Private</option>
+            </select>
           </form>
           <div class="submit">
             <button type="submit" class="btn btn-info span2" autofocus="" (click)="createSchedule()">Create Schedule</button> 
@@ -266,7 +271,7 @@
 
     <!-- COURSE LIST SECTION -->
 
-      <h2>Course Lists</h2>
+      <table><tr><td><h2>Public Course Lists</h2></td><td>   (Click Course Names to Render Timetable)</td></tr></table>
       <table class="courseListTable">
         <tr class="courseListTableHeaderRow">
           <td>Name</td>
@@ -278,7 +283,7 @@
         <!-- Render two rows for each course list (one hidden until expanded) -->
         <ng-container *ngFor="let courseList of scheduleDataInfo| keyvalue; let i=index">
           <tr>
-            <td (click)="showMoreCourseListInfo(courseList.key)" class="courseListTableTd" >{{ courseList.key }}</td> 
+            <td class="courseListTableTd"><span class="courseListTitle" (click)="courseListSelected(courseList.key)">{{ courseList.key }}</span></td> 
             <td (click)="showMoreCourseListInfo(courseList.key)" class="courseListTableTd" >{{ scheduleDataInfo[courseList.key].creator }} </td> 
             <td (click)="showMoreCourseListInfo(courseList.key)" class="courseListTableTd" >{{ scheduleDataInfo[courseList.key].modified }} </td> 
             <td (click)="showMoreCourseListInfo(courseList.key)" class="courseListTableTd" >{{ scheduleDataInfo[courseList.key].length }} </td> 

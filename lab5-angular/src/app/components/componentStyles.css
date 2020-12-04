@@ -153,5 +153,7 @@
     border: 1px solid black;
 }
 
-
+.courseListTitle:hover{
+    text-decoration: underline;
+}
 
