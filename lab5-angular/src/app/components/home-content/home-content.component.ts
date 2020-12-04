@@ -1,17 +1,35 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { courseObject } from './courseInterface'
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { faLink } from '@fortawesome/free-solid-svg-icons';
 import { AuthService } from '@auth0/auth0-angular';
 import { ConstantPool } from '@angular/compiler';
 
+// observables frominterfaces so we can get from http requests
+import { courseObject } from './courseInterface';
+import { scheduleInfo } from 'src/app/components/scheduleInterface';
+
 @Injectable()
 export class ConfigService {
+  public port = 3000;
   private queryString: string = "http://localhost:3000/api/courseData";
+  private publicScheduleDataString: string = "http://localhost:" + this.port + "/api/public/update-data";
+  private privateScheduleDataString: string = "http://localhost:3000/api/user/update-data";
 
   constructor(private http: HttpClient) {}
+
+    postPublicScheduleData(body): Observable<scheduleInfo[]> {
+      return this.http.post<scheduleInfo[]>(this.publicScheduleDataString, body);
+      /* body is in the format body = { scheduleName1: { course1: { COURSE INFO }, course2: { COURSE 2 INFO }, ... }, schedule2: { ... }, ...}*/
+    };
+
+    postPrivateScheduleData(body): Observable<scheduleInfo[]> {
+      return this.http.post<scheduleInfo[]>(this.privateScheduleDataString, body);
+      /* body is in the format body = { scheduleName1: { course1: { COURSE INFO }, course2: { COURSE 2 INFO }, ... }, schedule2: { ... }, ...}*/
+    };
+    
+
     getcourses(): Observable<courseObject[]> {
       return this.http.get<courseObject[]>(this.queryString);
     };
@@ -33,6 +51,10 @@ export class HomeContentComponent {
 
   ngOnInit(){
     console.log("on init called");
+
+    this.auth.user$.subscribe(
+      (profile) => (this.profileJson = JSON.stringify(profile, null, 2))
+    );
     // removed until connecting to db
     //this._configservice.getcourses().subscribe(data => this.dataArray = data);
     this.dataArray = [
@@ -118,7 +140,6 @@ export class HomeContentComponent {
   };
 
   faLink = faLink;
-
   show = true;
   checkboxValue: boolean = false;
   scheduleNameInput: string; // initalizing to "" will cause errors: schedules will never have names
@@ -140,6 +161,8 @@ export class HomeContentComponent {
   editingCourseList; // if true shows the optoins to edit a course list so the user can edit
   cannotRenderEmpty; // true if the course selected from the list is empty so a message is displayed instead of an empty time table
   showEditButton; // set to true when a course is selected from the list so the edit button appears
+  port;
+  profileJson = null; // user profile data (set on ngOnInit) -> promise recieved from user data
 
   constructor(private _configservice:ConfigService, public auth: AuthService){
     this.showInfoTable = false;
@@ -153,12 +176,13 @@ export class HomeContentComponent {
     this.newScheduleEnabled = false;""
     this.scheduleDataInfo = {};// note was using this for testing cuz it breaks cuz its not in the scheduleData object but you CAN use it for testing{test1: { creator: "Marcus", modified: "2020-12-3", length: undefined, description: "some description", visiblity: "Private" }};
     this.cannotRenderEmpty = false;
+    this.port = 7000; // breaks --> || process.env.API_PORT;
   }
 
   getData(){
 
     let matchingCourses = [];
-    let courseData = this.dataArray;
+    let courseData = this.dataArray;  // this.dataArry hard coded in ngOninit but get from db todo
 
     // getting search parameters
       
@@ -343,8 +367,10 @@ export class HomeContentComponent {
 
   createSchedule(){
     let name: string = this.scheduleNameInput;
+    let user = this.auth.user$;
     let description: string = (document.getElementById("scheduleDescription") as HTMLInputElement).value;
     let visiblity: string = (document.getElementById("visibilityDropDown") as HTMLInputElement).value;
+    console.log("visibility: " + visiblity );
     
     if(!this.scheduleNameInput){
       alert("Error: schedule name empty");
@@ -360,10 +386,11 @@ export class HomeContentComponent {
 
       // todo get modified date and creator from user
       // todo saitize description?
-      this.scheduleDataInfo[name] = {creator: "", modified: "", length: undefined, description: description, expanded: false, visibility: visiblity};
+      this.scheduleDataInfo[name] = {creator: user, modified: "", length: undefined, description: description, expanded: false, visibility: visiblity};
     }
     this.scheduleNameInput = "";
     this.newScheduleEnabled =  false; // hide the create schedule options again
+    this.updateDb();
   }
 
   courseSelected(course: object){ 
@@ -683,6 +710,46 @@ export class HomeContentComponent {
       }
     }
     console.log(this.scheduleData[courseList]);
+  }
+
+  // update user data in database
+  updateDb(){
+    console.log("User:" + this.auth.user$);
+    
+    // data to be sent to db
+      let privateScheduleData = {};
+      let publicScheduleData = {};
+
+    // creating public and private course list data to send in request
+
+      for(let i = 0; i<Object.keys(this.scheduleDataInfo).length; i++/*let courseList of this.scheduleDataInfo*/){
+        console.log(this.scheduleDataInfo);
+        console.log(Object.keys(this.scheduleDataInfo).length);
+        //console.log(this.scheduleDataInfo[i].visibility);
+
+        // transferring private courses to privateScheduleData{}
+        if(this.scheduleDataInfo[Object.keys(this.scheduleDataInfo)[i]].visibility == "Private"){
+          console.log("appended to private")
+          privateScheduleData[Object.keys(this.scheduleDataInfo)[i]] = this.scheduleDataInfo[i];
+        }
+        // transferring public courses to publicScheduleData{}
+        else if(this.scheduleDataInfo[Object.keys(this.scheduleDataInfo)[i]].visibility == "Public"){
+          console.log("appended to public")
+          publicScheduleData[Object.keys(this.scheduleDataInfo)[i]] = this.scheduleDataInfo[i];
+        }
+        else{
+          console.log("ERROR COURSE LIST VISIBILITY NOT SET")
+        }
+      }
+    
+    // post to public db
+
+      this._configservice.postPublicScheduleData(publicScheduleData).subscribe(response => console.log("response"));
+
+    // post to private db
+      
+      privateScheduleData["creator"] = this.auth.user$; // setting username in body
+      this._configservice.postPrivateScheduleData(privateScheduleData).subscribe(response => console.log("response"));
   }
 }
 
