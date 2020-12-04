@@ -179,7 +179,7 @@
           </div>
 
           <div class="optional-field">Search Course Data By Keyword<br>
-            <input id ="keywords" type="text" placeholder="eg. FINANCIAL ANALYSIS"> 
+            <input id ="keywords" type="text" placeholder="eg. FINANCIAL ANALYSIS" value="ACTU"> 
           </div>
 
           <div class="submit">
@@ -270,57 +270,100 @@
     <hr />
 
     <!-- COURSE LIST SECTION -->
-
-      <table><tr><td><h2>Public Course Lists</h2></td><td>   (Click Course Names to Render Timetable)</td></tr></table>
       <table class="courseListTable">
-        <tr class="courseListTableHeaderRow">
-          <td>Name</td>
-          <td>Creator</td>
-          <td>Modified Date</td>
-          <td>Number of Courses</td>
-        </tr>
+        <tr>
+          <td class="courseListMiddleRowWidth100percent"> 
+            <table><tr><td><h2>Public Course Lists</h2></td><td>   (Click Course Names to Render Timetable)</td></tr></table>
+            <table class="courseListTable">
+              <tr class="courseListTableHeaderRow">
+                <td>Name</td>
+                <td>Creator</td>
+                <td>Modified Date</td>
+                <td>Number of Courses</td>
+              </tr>
 
-        <!-- Render two rows for each course list (one hidden until expanded) -->
-        <ng-container *ngFor="let courseList of scheduleDataInfo| keyvalue; let i=index">
-          <tr>
-            <td class="courseListTableTd"><span class="courseListTitle" (click)="courseListSelected(courseList.key)">{{ courseList.key }}</span></td> 
-            <td (click)="showMoreCourseListInfo(courseList.key)" class="courseListTableTd" >{{ scheduleDataInfo[courseList.key].creator }} </td> 
-            <td (click)="showMoreCourseListInfo(courseList.key)" class="courseListTableTd" >{{ scheduleDataInfo[courseList.key].modified }} </td> 
-            <td (click)="showMoreCourseListInfo(courseList.key)" class="courseListTableTd" >{{ scheduleDataInfo[courseList.key].length }} </td> 
+              <!-- Render two rows for each course list (one hidden until expanded) -->
+              <ng-container *ngFor="let courseList of scheduleDataInfo| keyvalue; let i=index">
+                <tr>
+                  <td class="courseListTableTd"><span class="courseListTitle" (click)="courseListSelected(courseList.key)">{{ courseList.key }}</span></td> 
+                  <td (click)="showMoreCourseListInfo(courseList.key)" class="courseListTableTd" >{{ scheduleDataInfo[courseList.key].creator }} </td> 
+                  <td (click)="showMoreCourseListInfo(courseList.key)" class="courseListTableTd" >{{ scheduleDataInfo[courseList.key].modified }} </td> 
+                  <td (click)="showMoreCourseListInfo(courseList.key)" class="courseListTableTd" >{{ scheduleDataInfo[courseList.key].length }} </td> 
+                </tr>
+
+                
+                  <tr class="infoTableTr" *ngIf="scheduleDataInfo[courseList.key].expanded">
+                    
+                    <td colspan="5">
+                      About {{ courseList.key }} <br>
+                      Description: {{ scheduleDataInfo[courseList.key].description }} <br>
+                      Courses:
+                      <ul>
+                        <li *ngFor="let course of scheduleData[courseList.key]"> <!-- i think this is breaking bc the hard coded courses in scheduleDataInfo dont match those in scheduleData but it will work later-->
+                          {{ course["subject"] }} {{ course["catalog_nbr"] }} <button (click)="removeCourseFromList(courseList.key, course['catalog_nbr'])">remove</button>
+                        </li>
+                      </ul>
+                    </td>
+                  </tr>
+              </ng-container>
+
+            </table>
+            </td>
+            <td class="editOptionsTd">
+              <div class="editOptionsDiv">
+              <table *ngIf="showEditButton">
+                <tr>
+                  <td>
+                    <button type="submit" class="btn btn-info span2" autofocus="" (click)="toggleEditCourseList()"><ng-container *ngIf="!editingCourseList">Edit {{ activeScheduleName }}</ng-container><ng-container *ngIf="editingCourseList">Cancel</ng-container></button>
+                    <button class="redDelete" *ngIf="editingCourseList" type="submit"  autofocus="" (click)="deleteCourseList(activeScheduleName)">Delete</button>
+                  </td>
+                </tr>
+                <ng-container *ngIf="editingCourseList">
+                  <tr>
+                    <td>
+                      Name:
+                      <input id ="editNameValue" type="text" [value]="activeScheduleName"> 
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      Description:
+                      <form>
+                        <textarea id ="editScheduleDescription" [value]="scheduleDataInfo[activeScheduleName].description"></textarea>
+                      </form>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      Visibility:
+                      <select id="editVisibilityDropDown" [value]="scheduleDataInfo[activeScheduleName].visibility">
+                        <option>Public</option>
+                        <option selected="selected">Private</option>
+                      </select>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <button type="submit" class="btn btn-info span2" autofocus="" (click)="editCourseList()">Save</button>
+                    </td>
+                  </tr>
+                </ng-container>
+              </table>
+            </div>
+            </td>
           </tr>
-
-          
-            <tr class="infoTableTr" *ngIf="scheduleDataInfo[courseList.key].expanded">
-              
-              <td colspan="5">
-                About {{ courseList.key }} <br>
-                Description: {{ scheduleDataInfo[courseList.key].description }} <br>
-                Courses:
-                <ul>
-                  <li *ngFor="let course of ScheduleData[courseList.key]"> <!-- i think this is breaking bc the hard coded courses in scheduleDataInfo dont match those in scheduleData but it will work later-->
-                    {{ course["subject"] }} {{ course["catalog_nbr"] }} 
-                  </li>
-                </ul>
-              </td>
-            </tr>
-        </ng-container>
-
-      </table>
+        </table>
 
     <hr />
 
     <!-- TIME TABLE SECTION -->
 
-      <div id="timeTableContainer" *ngIf="showTimeTable" >
+      <div *ngIf="cannotRenderEmpty" >
+        <h2>Cannot Render Empty</h2>
+      </div>
 
-        <table>
-          <tr>
-            <td><h2>Time Table: {{ renderedSchedule }}</h2></td>
-            <td>
-              <button type="submit" class="btn btn-info span2" autofocus="" (click)="deleteCourseList(activeScheduleName)">Delete {{ renderedSchedule }}</button>
-            </td>
-          </tr>
-        </table>
+      <div id="timeTableContainer" *ngIf="showTimeTable" >
+        <h2>Time Table: {{ renderedSchedule }}</h2>  
         <br/>
 
         <table class="timeTable">

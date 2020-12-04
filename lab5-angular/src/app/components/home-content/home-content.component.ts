@@ -5,6 +5,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { faLink } from '@fortawesome/free-solid-svg-icons';
 import { AuthService } from '@auth0/auth0-angular';
+import { ConstantPool } from '@angular/compiler';
 
 @Injectable()
 export class ConfigService {
@@ -136,7 +137,10 @@ export class HomeContentComponent {
   dataArray;
   newScheduleEnabled; // when the users clicks the button to create new schedule, fields to do so are shown
   scheduleDataInfo; // info object correspondiong to the ScheduleData object with info for each schedule. Format is = { schedule1: { creator: "", modified: "", length: undefined, description: "", }, schedule2: { ... }, ... }
-  
+  editingCourseList; // if true shows the optoins to edit a course list so the user can edit
+  cannotRenderEmpty; // true if the course selected from the list is empty so a message is displayed instead of an empty time table
+  showEditButton; // set to true when a course is selected from the list so the edit button appears
+
   constructor(private _configservice:ConfigService, public auth: AuthService){
     this.showInfoTable = false;
     this.showTimeTable = false;
@@ -148,6 +152,7 @@ export class HomeContentComponent {
     this.dataArray = [];
     this.newScheduleEnabled = false;""
     this.scheduleDataInfo = {};// note was using this for testing cuz it breaks cuz its not in the scheduleData object but you CAN use it for testing{test1: { creator: "Marcus", modified: "2020-12-3", length: undefined, description: "some description", visiblity: "Private" }};
+    this.cannotRenderEmpty = false;
   }
 
   getData(){
@@ -434,6 +439,8 @@ export class HomeContentComponent {
     }*/
 
     this.renderedSchedule = this.activeScheduleName;
+
+
     /*convert activeSchedule (array of objects) to organized object of format:
     timeBasedSchedule = {
       "8:30 AM": { monday: COURSE_NAME1, tuesday: COURSE_NAME2, wednesday: {}, ...}
@@ -588,8 +595,15 @@ export class HomeContentComponent {
   }
 
   courseListSelected(name: string){
-    console.log("schedule name passed:" + name);
-    console.log(this.scheduleData);
+    if(Object.keys(this.scheduleData[name]).length == 0){
+      this.showEditButton = true;
+      this.cannotRenderEmpty = true;
+      this.renderedSchedule = name;
+      this.activeScheduleName = name;
+      return;
+    }
+    this.showEditButton = true;
+    this.cannotRenderEmpty = false;
     this.activeSchedule = this.scheduleData[name];
     console.log(this.activeSchedule);
     this.activeScheduleName = name;
@@ -597,16 +611,79 @@ export class HomeContentComponent {
   }
 
   deleteCourseList(name:string){
-    console.log(name);
     delete this.scheduleData[name];
     delete this.scheduleDataInfo[name];
     this.activeSchedule = undefined;
     this.showTimeTable = false;
     console.log(this.scheduleData);
-
     //todo write to database to delete
   }
-  
+
+  toggleEditCourseList(){
+    if(this.editingCourseList){
+      this.editingCourseList = false;
+    }else{
+      this.editingCourseList = true;
+    }
+  }
+
+  editCourseList(){
+    let newName = (document.getElementById("editNameValue") as HTMLInputElement).value;
+    let newDesc = (document.getElementById("editScheduleDescription") as HTMLInputElement).value;
+    let newVisibility = (document.getElementById("editVisibilityDropDown") as HTMLInputElement).value;
+
+    var newScheduleDataInfoObject = {};
+
+    // if nothing has chnaged
+    if(newName == this.activeScheduleName && newDesc == this.scheduleDataInfo[this.activeScheduleName].description && newVisibility == this.scheduleDataInfo[this.activeScheduleName].visibility){
+      this.editingCourseList = false;
+      return;
+    }
+    // else, something has changed
+
+      // check is description changed
+      if(newDesc != this.scheduleDataInfo[this.activeScheduleName].description){
+        newScheduleDataInfoObject["description"] = newDesc;
+      }else{
+        newScheduleDataInfoObject["description"] = this.scheduleDataInfo[this.activeScheduleName].description;
+      }
+
+      if(newVisibility != this.scheduleDataInfo[this.activeScheduleName].visibility){
+        newScheduleDataInfoObject["visibility"] = newVisibility;
+      }else{
+        newScheduleDataInfoObject["visibility"] = this.scheduleDataInfo[this.activeScheduleName].visibility;
+      }
+
+      // and last but not least set the new object to the one we've created and delete the old one
+      if(newName != this.activeScheduleName){
+
+        // replace it in object with schedule info (description, creator, etc.)
+          delete this.scheduleDataInfo[this.activeScheduleName];
+          this.scheduleDataInfo[newName] = newScheduleDataInfoObject; 
+
+        // replace it in object with course data
+          this.scheduleData[newName] = this.scheduleData[this.activeScheduleName];
+          delete this.scheduleData[this.activeScheduleName]; 
+
+        // set the active schedule to the new one
+        this.activeScheduleName = newName;
+        this.activeSchedule = this.scheduleData[newName];
+
+      }else{  // if the name HASNT been changed, simply just replace the existing object with the new one. Nothing changes in the course data object though
+        this.scheduleDataInfo[this.activeScheduleName] = newScheduleDataInfoObject;
+      }
+      console.log("schedule updated");
+      this.editingCourseList = false;
+  }
+
+  removeCourseFromList(courseList: string, catalogNumber: string){
+    for(let i = 0; i< this.scheduleData[courseList].length; i++){
+      if(this.scheduleData[courseList][i]["catalog_nbr"] == catalogNumber){
+        delete this.scheduleData[courseList][i];
+      }
+    }
+    console.log(this.scheduleData[courseList]);
+  }
 }
 
 /* course list format :

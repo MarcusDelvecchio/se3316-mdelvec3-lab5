@@ -139,8 +139,7 @@
 }
 
 .courseListTable{
-    border: 1px solid black; 
-    border-spacing: 0;
+	border-spacing: 0;
 }
 
 .courseListTableHeaderRow{
@@ -157,3 +156,32 @@
     text-decoration: underline;
 }
 
+.editOptionsSubTable{
+	width:100%;
+}
+
+.editOptionsTd{
+	width:100%;
+	align-self: center;
+	align-content: center;
+}
+
+.editOptionsDiv{
+	/*float:right;*/
+	align-self: center;
+	align-content: center;
+	margin-right: 8em;
+	margin-left: 8em;
+}
+
+.courseListTable{
+	width:100%;
+}
+
+.courseListMiddleRowWidth100percent{
+	width:70%;
+}
+
+.redDelete{
+	background-color: #ff4d4d;
+}
