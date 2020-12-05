@@ -7,9 +7,10 @@ import { AuthService } from '@auth0/auth0-angular';
 import { ConstantPool } from '@angular/compiler';
 //import { Headers } from '@angular/common/http'
 
-// observables frominterfaces so we can get from http requests
+// observables from interfaces so we can get from http requests
 import { courseObject } from './courseInterface';
-import { scheduleInfo } from 'src/app/components/scheduleInterface';
+import { scheduleInfo } from './scheduleInterface';
+import { scheduleResponse } from './scheduleResponseInterface';
 
 @Injectable()
 export class ConfigService {
@@ -17,7 +18,8 @@ export class ConfigService {
   private queryString: string = "http://localhost:" + this.port + "/api/courseData";
   private publicScheduleDataString: string = "http://localhost:" + this.port + "/api/public/update-data";
   private privateScheduleDataString: string = "http://localhost:" + this.port + "/api/user/update-data";
-  private getPublicAndPrivateScheduleData: string = "http://localhost:" + this.port + "/api/user/scheduleData";
+  private getPublicScheduleDataString: string = "http://localhost:" + this.port + "/api/public/scheduleData";
+  private getPrivateScheduleDataString: string = "http://localhost:" + this.port + "/api/private/scheduleData";
 
   constructor(private http: HttpClient) {}
 
@@ -35,8 +37,12 @@ export class ConfigService {
       return this.http.get<courseObject[]>(this.queryString);
     };
 
-    getScheduleData(): Observable<any[]> {  // observable type any?
-      return this.http.get<any[]>(this.getPublicAndPrivateScheduleData);
+    getPublicScheduleData(): Observable<scheduleResponse[]> {  // observable type any?
+      return this.http.get<any[]>(this.getPublicScheduleDataString);
+    };
+
+    getPrivateScheduleData(): Observable<scheduleResponse[]> {  // observable type any?
+      return this.http.get<any[]>(this.getPrivateScheduleDataString);
     };
 
     renderTableData(){};
@@ -714,10 +720,44 @@ export class HomeContentComponent {
     this.auth.user$.subscribe(
       (profile) => (this.profileJson = JSON.stringify(profile, null, 2))
     );
-
-    this._configservice.getScheduleData().subscribe( (data)  => {
-      this.dataArray = data
+    
+    this._configservice.getPublicScheduleData().subscribe( (data)  => {
       console.log(data);
+      /* (data) is in the format:
+       *    data = {
+       *      scheduleDataInfo: { {...}, {...}, {...}, ...}
+       *      scheduleData: { {...}, {...}, {...}, ...}
+       *    }                                                   */
+      
+      // add to scheduleDataInfo array from scheduleDataInfo (property that's value is the object) in the returned data
+      for(let key of Object.keys(data)){
+
+        // add scheduleDataInfo from returned data to our schedule data info
+
+          if(key == "scheduleDataInfo"){
+            console.log("key is scheduleDataInfo")
+            for(let i = 0; i< Object.keys(data[key]).length; i++){
+              this.scheduleDataInfo[Object.keys(data[key])[i]] = data["scheduleDataInfo"][Object.keys(data["scheduleDataInfo"])[i]]; 
+              // this.scheduleDataInfo[ SCHEDULE NAME ] = collectionItem["scheduleDataInfo"] VALUE
+            }
+          }
+
+        // add scheduleData from returned data to our schedule data 
+        
+          else if(key == "scheduleData"){
+            console.log("key is scheduleData")
+            for(let i = 0; i< Object.keys(data[key]).length; i++){
+              this.scheduleData[Object.keys(data[key])[i]] = data["scheduleData"][Object.keys(data["scheduleData"])[i]]; 
+              // this.scheduleData[ SCHEDULE NAME ] = collectionItem["scheduleData"] VALUE
+            }
+          }
+
+          else{
+            console.log("something broked returned data has more than scheduleDataInfo and scheduleData properties");
+          }
+      }
+      console.log(this.scheduleDataInfo);
+      console.log(this.scheduleData);
     });
     // removed until connecting to db
     //this._configservice.getcourses().subscribe(data => this.dataArray = data);

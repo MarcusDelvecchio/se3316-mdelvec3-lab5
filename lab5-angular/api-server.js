@@ -141,7 +141,7 @@ app.post("/api/user/update-data"/*, checkJwt*/, (req, res)=> {
         });
   });
 
-  app.get("/api/user/scheduleData", (req, res) => {
+  app.get("/api/public/scheduleData", (req, res) => {
 
     return mongoClient.connect()
       .then( () => {
@@ -176,7 +176,6 @@ app.post("/api/user/update-data"/*, checkJwt*/, (req, res)=> {
       .catch(error => {
         console.log("could not connect to db");
       });
-  
   });
 
 /*

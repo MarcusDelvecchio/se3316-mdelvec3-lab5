@@ -19,5 +19,6 @@ export interface courseObject {
       }
     ],
       catalog_description: string,
+    // review?
   }
   
