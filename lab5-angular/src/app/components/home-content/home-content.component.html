@@ -283,11 +283,11 @@
               </tr>
 
               <!-- Render two rows for each course list (one hidden until expanded) -->
-              <ng-container *ngFor="let courseList of scheduleDataInfo| keyvalue; let i=index">
+              <ng-container *ngFor="let courseList of scheduleDataInfo| keyvalue: orderByDate">
                 <tr>
                   <td class="courseListTableTd"><span class="courseListTitle" (click)="courseListSelected(courseList.key)">{{ courseList.key }}</span></td> 
                   <td (click)="showMoreCourseListInfo(courseList.key)" class="courseListTableTd" >{{ scheduleDataInfo[courseList.key].creator }} </td> 
-                  <td (click)="showMoreCourseListInfo(courseList.key)" class="courseListTableTd" >{{ scheduleDataInfo[courseList.key].modified }} </td> 
+                  <td (click)="showMoreCourseListInfo(courseList.key)" class="courseListTableTd" >{{ getDisplayDate(scheduleDataInfo[courseList.key].modified) }}
                   <td (click)="showMoreCourseListInfo(courseList.key)" class="courseListTableTd" >{{ scheduleDataInfo[courseList.key].length }} </td> 
                 </tr>
 
@@ -299,8 +299,8 @@
                       Description: {{ scheduleDataInfo[courseList.key].description }} <br>
                       Courses:
                       <ul>
-                        <li *ngFor="let course of scheduleData[courseList.key]"> <!-- i think this is breaking bc the hard coded courses in scheduleDataInfo dont match those in scheduleData but it will work later-->
-                          {{ course["subject"] }} {{ course["catalog_nbr"] }} <button (click)="removeCourseFromList(courseList.key, course['catalog_nbr'])">remove</button>
+                        <li *ngFor="let course of scheduleData[courseList.key] | keyvalue"> <!-- i think this is breaking bc the hard coded courses in scheduleDataInfo dont match those in scheduleData but it will work later-->
+                          {{ course.value["subject"] }} {{ course.value["catalog_nbr"] }} <button (click)="removeCourseFromList(courseList.key, course['catalog_nbr'])">remove</button>
                         </li>
                       </ul>
                     </td>

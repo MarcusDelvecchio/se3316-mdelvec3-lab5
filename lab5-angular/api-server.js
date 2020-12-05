@@ -5,6 +5,7 @@ const cors = require("cors");
 const morgan = require("morgan");
 const helmet = require("helmet");
 const jwt = require("express-jwt");
+const timetable = require("./src/Lab3-timetable-data.json");
 // "This module lets you authenticate HTTP requests using JWT tokens in your
 // Node.js applications. It provides several functions that make working with JWTs easier."
 
@@ -26,7 +27,7 @@ const app = express();
 // bpdy parsing
 app.use(express.json());  // for parsing application/json objects passed in POST bodies
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+app.use(bodyParser.json())
 
 
 const port = 7000 || process.env.API_PORT;
@@ -140,6 +141,12 @@ app.post("/api/user/update-data"/*, checkJwt*/, (req, res)=> {
             return res.status(500).send("Failed to store user info.");
         });
   });
+
+  app.get("/api/courseData", (req, res) => {
+
+    // validation ??
+    res.send(timetable)
+  })
 
   app.get("/api/public/scheduleData", (req, res) => {
 

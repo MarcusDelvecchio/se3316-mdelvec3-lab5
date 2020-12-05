@@ -15,34 +15,34 @@ import { scheduleResponse } from './scheduleResponseInterface';
 @Injectable()
 export class ConfigService {
   public port = 7000;
-  private queryString: string = "http://localhost:" + this.port + "/api/courseData";
-  private publicScheduleDataString: string = "http://localhost:" + this.port + "/api/public/update-data";
-  private privateScheduleDataString: string = "http://localhost:" + this.port + "/api/user/update-data";
-  private getPublicScheduleDataString: string = "http://localhost:" + this.port + "/api/public/scheduleData";
-  private getPrivateScheduleDataString: string = "http://localhost:" + this.port + "/api/private/scheduleData";
+  private GETCourseDataString: string = "http://localhost:" + this.port + "/api/courseData";
+  private POSTpublicScheduleDataString: string = "http://localhost:" + this.port + "/api/public/update-data";
+  private POSTprivateScheduleDataString: string = "http://localhost:" + this.port + "/api/user/update-data";
+  private GETPublicScheduleDataString: string = "http://localhost:" + this.port + "/api/public/scheduleData";
+  private GETPrivateScheduleDataString: string = "http://localhost:" + this.port + "/api/private/scheduleData";
 
   constructor(private http: HttpClient) {}
 
     postPublicScheduleData(content): Observable<scheduleInfo[]> {
-      return this.http.post<scheduleInfo[]>(this.publicScheduleDataString, content);
+      return this.http.post<scheduleInfo[]>(this.POSTpublicScheduleDataString, content);
       /* body is in the format body = { scheduleName1: { course1: { COURSE INFO }, course2: { COURSE 2 INFO }, ... }, schedule2: { ... }, ...}*/
     };
 
     postPrivateScheduleData(content): Observable<scheduleInfo[]> {
-      return this.http.post<scheduleInfo[]>(this.privateScheduleDataString, content);
+      return this.http.post<scheduleInfo[]>(this.POSTprivateScheduleDataString, content);
       /* body is in the format body = { scheduleName1: { course1: { COURSE INFO }, course2: { COURSE 2 INFO }, ... }, schedule2: { ... }, ...}*/
     };
     
-    getcourses(): Observable<courseObject[]> {
-      return this.http.get<courseObject[]>(this.queryString);
+    getCourseData(): Observable<courseObject[]> {
+      return this.http.get<courseObject[]>(this.GETCourseDataString);
     };
 
     getPublicScheduleData(): Observable<scheduleResponse[]> {  // observable type any?
-      return this.http.get<any[]>(this.getPublicScheduleDataString);
+      return this.http.get<any[]>(this.GETPublicScheduleDataString);
     };
 
     getPrivateScheduleData(): Observable<scheduleResponse[]> {  // observable type any?
-      return this.http.get<any[]>(this.getPrivateScheduleDataString);
+      return this.http.get<any[]>(this.GETPrivateScheduleDataString);
     };
 
     renderTableData(){};
@@ -294,6 +294,7 @@ export class HomeContentComponent {
     let user = JSON.parse(this.profileJson).name
     let description: string = (document.getElementById("scheduleDescription") as HTMLInputElement).value;
     let visiblity: string = (document.getElementById("visibilityDropDown") as HTMLInputElement).value;
+    let currentTime = new Date();
     console.log("visibility: " + visiblity );
     
     if(!this.scheduleNameInput){
@@ -311,7 +312,7 @@ export class HomeContentComponent {
 
       // todo get modified date and creator from user
       // todo saitize description?
-      this.scheduleDataInfo[name] = { creator: user, modified: "", length: 0, description: description, expanded: false, visibility: visiblity };
+      this.scheduleDataInfo[name] = { creator: user, modified: currentTime, length: 0, description: description, expanded: false, visibility: visiblity };
     }
     this.scheduleNameInput = "";
     this.newScheduleEnabled =  false; // hide the create schedule options again
@@ -375,9 +376,30 @@ export class HomeContentComponent {
     // set new modified date and length for schedule info
     // TODO get modified date format 
       this.scheduleDataInfo[name].length = numberOfCourses;
-      this.scheduleDataInfo[name].modified = "some-modified-date";
+      this.scheduleDataInfo[name].modified = new Date();
     
     console.log(this.scheduleData);
+    this.updateDb()
+  }
+
+  orderByDate(a: any, b: any){
+    let a_dateString = a.value.modified
+    let b_dateString = b.value.modified
+    let a_date = new Date(a_dateString);
+    let b_date = new Date(b_dateString);
+    console.log("order by date");
+    //return a;
+    console.log(b_date.getTime());
+    console.log(a_date.getTime());
+    let aTIME = a_date.getTime();
+    let bTIME = b_date.getTime();
+    //return (aTIME > bTIME ? a : b);
+    return aTIME > bTIME ? -1 : (bTIME > aTIME ? 1 : 0);
+  }
+
+  getDisplayDate(date: string): string{
+    let newDate = new Date(date);
+    return newDate.getFullYear() + "-" + newDate.getDate() + "-" + newDate.getHours() +":"+ newDate.getMinutes()
   }
 
 
@@ -650,6 +672,7 @@ export class HomeContentComponent {
 
   // update user data in database
   updateDb(){
+    console.log("db updated");
     let profile = JSON.parse(this.profileJson);
     let user = profile.name
     
@@ -667,7 +690,6 @@ export class HomeContentComponent {
     // creating public and private course list data to send in request
 
       for(let i = 0; i<Object.keys(this.scheduleDataInfo).length; i++/*let courseList of this.scheduleDataInfo*/){
-        console.log(Object.keys(this.scheduleDataInfo).length);
 
         // if private, add course to privateScheduleData{}
 
@@ -703,15 +725,11 @@ export class HomeContentComponent {
 
     // post to public db
       
-      this._configservice.postPublicScheduleData(publicScheduleData).subscribe(response => console.log("response"));
+      this._configservice.postPublicScheduleData(publicScheduleData).subscribe(response => console.log(response));
 
     // post to private db
 
-      this._configservice.postPrivateScheduleData(privateScheduleData).subscribe(response => console.log("response"));
-  }
-
-  printTheFuckingAraayPleaseAndThanks(){
-    console.log(this.dataArray);
+      this._configservice.postPrivateScheduleData(privateScheduleData).subscribe(response => console.log(response));
   }
 
   ngOnInit(){
@@ -720,9 +738,17 @@ export class HomeContentComponent {
     this.auth.user$.subscribe(
       (profile) => (this.profileJson = JSON.stringify(profile, null, 2))
     );
+
+    // getting course data to populate tables with
+
+      this._configservice.getCourseData().subscribe(data => {
+        this.dataArray = data;
+      });
     
+    // getting schedule data from backend
     this._configservice.getPublicScheduleData().subscribe( (data)  => {
       console.log(data);
+
       /* (data) is in the format:
        *    data = {
        *      scheduleDataInfo: { {...}, {...}, {...}, ...}
@@ -759,88 +785,5 @@ export class HomeContentComponent {
       console.log(this.scheduleDataInfo);
       console.log(this.scheduleData);
     });
-    // removed until connecting to db
-    //this._configservice.getcourses().subscribe(data => this.dataArray = data);
-
-    // this.dataArray = [
-    //   {
-    //     "catalog_nbr": "1021B",
-    //     "subject": "ACTURSCI",
-    //     "className": "INTRO TO FINANCIAL SECURE SYS",
-    //     "course_info": [
-    //       {
-    //         "class_nbr": 5538,
-    //         "start_time": "8:30 AM",
-    //         "descrlong": "",
-    //         "end_time": "9:30 AM",
-    //         "campus": "Main",
-    //         "facility_ID": "PAB-106",
-    //         "days": [
-    //           "M",
-    //           "W",
-    //           "F"
-    //         ],
-    //         "instructors": [],
-    //         "class_section": "001",
-    //         "ssr_component": "LEC",
-    //         "enrl_stat": "Not full",
-    //         "descr": "RESTRICTED TO YR 1 STUDENTS."
-    //       }
-    //     ],
-    //     "catalog_description": "The nature and cause of financial security and insecurity; public, private and employer programs and products to reduce financial insecurity, including social security, individual insurance and annuities along with employee pensions and benefits.\n\nExtra Information: 3 lecture hours."
-    //   },
-    //   {
-    //     "catalog_nbr": 2053,
-    //     "subject": "ACTURSCI",
-    //     "className": "MATH FOR FINANCIAL ANALYSIS",
-    //     "course_info": [
-    //       {
-    //         "class_nbr": 1592,
-    //         "start_time": "11:30 AM",
-    //         "descrlong": "Prerequisite(s):1.0 course or two 0.5 courses at the 1000 level or higher from Applied Mathematics, Calculus, or Mathematics.",
-    //         "end_time": "12:30 PM",
-    //         "campus": "Main",
-    //         "facility_ID": "NCB-113",
-    //         "days": [
-    //           "M",
-    //           "W",
-    //           "F"
-    //         ],
-    //         "instructors": [],
-    //         "class_section": "001",
-    //         "ssr_component": "LEC",
-    //         "enrl_stat": "Full",
-    //         "descr": ""
-    //       }
-    //     ],
-    //     "catalog_description": "Simple and compound interest, annuities, amortization, sinking funds, bonds, bond duration, depreciation, capital budgeting, probability, mortality tables, life annuities, life insurance, net premiums and expenses. Cannot be taken for credit in any module in Statistics or Actuarial Science, Financial Modelling or Statistics, other than the minor in Applied Financial Modeling.\n\nAntirequisite(s): Actuarial Science 2553A/B.\n\nExtra Information: 3 lecture hours."
-    //   },
-    //   {
-    //     "catalog_nbr": "2427B",
-    //     "subject": "ACTURSCI",
-    //     "className": "LONG TERM ACTUARIAL MATH I",
-    //     "course_info": [
-    //       {
-    //         "class_nbr": 2663,
-    //         "start_time": "12:30 PM",
-    //         "descrlong": "Prerequisite(s): A minimum mark of 60% in each of Actuarial Science 2553A/B, either Calculus 2402A/B or Calculus 2502A/B, and Statistical Sciences 2857A/B. Restricted to students enrolled in any Actuarial Science module.",
-    //         "end_time": "1:30 PM",
-    //         "campus": "Main",
-    //         "facility_ID": "MC-105B",
-    //         "days": [
-    //           "M",
-    //           "W",
-    //           "F"
-    //         ],
-    //         "instructors": [],
-    //         "class_section": "001",
-    //         "ssr_component": "LEC",
-    //         "enrl_stat": "Not full",
-    //         "descr": ""
-    //       }
-    //     ],
-    //     "catalog_description": "Models for the time until death, single life annuity and life insurance present values and their probability distributions; introduction to equivalence principle and premium calculations.\n\nExtra Information: 3 lecture hours, 1 tutorial hour."
-    //   },
-    // ];
   };
 }

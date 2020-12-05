@@ -1,6 +1,6 @@
 export interface scheduleInfo {
     creator: string, 
-    modified: string,   // date format??
+    modified: Date,   // date format??
     length: number,
     description: string, 
     expanded: false,
