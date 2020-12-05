@@ -17,27 +17,29 @@ export class ConfigService {
   private queryString: string = "http://localhost:" + this.port + "/api/courseData";
   private publicScheduleDataString: string = "http://localhost:" + this.port + "/api/public/update-data";
   private privateScheduleDataString: string = "http://localhost:" + this.port + "/api/user/update-data";
+  private getPublicAndPrivateScheduleData: string = "http://localhost:" + this.port + "/api/user/scheduleData";
 
   constructor(private http: HttpClient) {}
 
     postPublicScheduleData(content): Observable<scheduleInfo[]> {
-      let body = JSON.stringify(content);
-      return this.http.post<scheduleInfo[]>(this.publicScheduleDataString, body);
+      return this.http.post<scheduleInfo[]>(this.publicScheduleDataString, content);
       /* body is in the format body = { scheduleName1: { course1: { COURSE INFO }, course2: { COURSE 2 INFO }, ... }, schedule2: { ... }, ...}*/
     };
 
     postPrivateScheduleData(content): Observable<scheduleInfo[]> {
-      //let body = JSON.stringify(content);
-      //const headers = new Headers().set('Content-Type', 'application/json; charset=utf-8');
-      return this.http.post<scheduleInfo[]>(this.privateScheduleDataString, content/*, {headers: headers}*/);
+      return this.http.post<scheduleInfo[]>(this.privateScheduleDataString, content);
       /* body is in the format body = { scheduleName1: { course1: { COURSE INFO }, course2: { COURSE 2 INFO }, ... }, schedule2: { ... }, ...}*/
     };
     
-
     getcourses(): Observable<courseObject[]> {
       return this.http.get<courseObject[]>(this.queryString);
     };
-    getData(){};
+
+    getScheduleData(): Observable<any[]> {  // observable type any?
+      return this.http.get<any[]>(this.getPublicAndPrivateScheduleData);
+    };
+
+    renderTableData(){};
     searchSubmitted(){};
     renderTimeTable(){};
     addCoursesToSchedule(){};
@@ -93,7 +95,8 @@ export class HomeContentComponent {
     this.port = 7000; // breaks --> || process.env.API_PORT;
   }
 
-  getData(){
+  // populated time table after search is submitted
+  renderTableData(){
 
     let matchingCourses = [];
     let courseData = this.dataArray;  // this.dataArry hard coded in ngOninit but get from db todo
@@ -107,6 +110,7 @@ export class HomeContentComponent {
       let keywords = (document.getElementById("keywords") as HTMLInputElement).value;
 
     // check if any keywords entered, if so prioritize them first
+      
       if(keywords != undefined && subjCourseKeywords != " " && subjCourseKeywords != null){
 
         if(keywords.length < 4){
@@ -263,7 +267,7 @@ export class HomeContentComponent {
 
   searchSubmitted(){
     // getting dummy data but should be making http request
-      this.getData();
+      this.renderTableData();
       this.showInfoTable = true;
     
     // delete all this?
@@ -301,11 +305,13 @@ export class HomeContentComponent {
 
       // todo get modified date and creator from user
       // todo saitize description?
-      this.scheduleDataInfo[name] = {creator: user, modified: "", length: undefined, description: description, expanded: false, visibility: visiblity};
+      this.scheduleDataInfo[name] = { creator: user, modified: "", length: 0, description: description, expanded: false, visibility: visiblity };
     }
     this.scheduleNameInput = "";
     this.newScheduleEnabled =  false; // hide the create schedule options again
-    this.updateDb();
+
+    // update the database with the newly created schedule
+      this.updateDb();
   }
 
   courseSelected(course: object){ 
@@ -638,7 +644,6 @@ export class HomeContentComponent {
 
   // update user data in database
   updateDb(){
-    console.log(this.profileJson);
     let profile = JSON.parse(this.profileJson);
     let user = profile.name
     
@@ -656,39 +661,51 @@ export class HomeContentComponent {
     // creating public and private course list data to send in request
 
       for(let i = 0; i<Object.keys(this.scheduleDataInfo).length; i++/*let courseList of this.scheduleDataInfo*/){
-        console.log(this.scheduleData);
         console.log(Object.keys(this.scheduleDataInfo).length);
 
-        // transferring private courses to privateScheduleData{}
-        if(this.scheduleDataInfo[Object.keys(this.scheduleDataInfo)[i]].visibility == "Private"){
-          console.log("appended to private")
-          privateScheduleData["scheduleData"][Object.keys(this.scheduleDataInfo)[i]] = this.scheduleData[Object.keys(this.scheduleDataInfo)[i]];
-          
-          // todo also pass scheduleDataInfo
-          privateScheduleData["scheduleDataInfo"][Object.keys(this.scheduleDataInfo)[i]] = this.scheduleDataInfo[Object.keys(this.scheduleDataInfo)[i]];
-          console.log(privateScheduleData);
-        }
-        // transferring public courses to publicScheduleData{}
-        else if(this.scheduleDataInfo[Object.keys(this.scheduleDataInfo)[i]].visibility == "Public"){
-          console.log("appended to public")
-          publicScheduleData[Object.keys(this.scheduleDataInfo)[i]] = this.scheduleData[Object.keys(this.scheduleDataInfo)[i]];
-          publicScheduleData["scheduleDataInfo"][Object.keys(this.scheduleDataInfo)[i]] = this.scheduleDataInfo[Object.keys(this.scheduleDataInfo)[i]];
-          console.log(publicScheduleData);
-        }
-        else{
-          console.log("ERROR COURSE LIST VISIBILITY NOT SET");
-          // todo also pass scheduleDataInfo 
-        }
-      }
-    
-    // post to public db
+        // if private, add course to privateScheduleData{}
 
-      //this._configservice.postPublicScheduleData(publicScheduleData).subscribe(response => console.log("response"));
+          if(this.scheduleDataInfo[Object.keys(this.scheduleDataInfo)[i]].visibility == "Private"){
+
+            // setting schedule data
+            privateScheduleData["scheduleData"][Object.keys(this.scheduleDataInfo)[i]] = this.scheduleData[Object.keys(this.scheduleDataInfo)[i]];
+            
+            // setting corresponding schedule data INFO
+            privateScheduleData["scheduleDataInfo"][Object.keys(this.scheduleDataInfo)[i]] = this.scheduleDataInfo[Object.keys(this.scheduleDataInfo)[i]];
+            console.log(privateScheduleData);
+          }
+
+        // else if, add course to publicScheduleData{}
+
+          else if(this.scheduleDataInfo[Object.keys(this.scheduleDataInfo)[i]].visibility == "Public"){
+
+            // setting schedule data
+            publicScheduleData["scheduleData"][Object.keys(this.scheduleDataInfo)[i]] = this.scheduleData[Object.keys(this.scheduleDataInfo)[i]];
+
+            // setting corresponding schedule data INFO 
+            publicScheduleData["scheduleDataInfo"][Object.keys(this.scheduleDataInfo)[i]] = this.scheduleDataInfo[Object.keys(this.scheduleDataInfo)[i]];
+            console.log(publicScheduleData);
+          }
+          else{
+            console.log("ERROR COURSE LIST VISIBILITY NOT SET");
+          }
+      }
+    // setting username in body. This is deleted in API before posting
+
+      publicScheduleData["user"] = user;
+      privateScheduleData["user"] = user;
+
+    // post to public db
+      
+      this._configservice.postPublicScheduleData(publicScheduleData).subscribe(response => console.log("response"));
 
     // post to private db
-      console.log(privateScheduleData);
-      //privateScheduleData["creator"] = user; // setting username in body
+
       this._configservice.postPrivateScheduleData(privateScheduleData).subscribe(response => console.log("response"));
+  }
+
+  printTheFuckingAraayPleaseAndThanks(){
+    console.log(this.dataArray);
   }
 
   ngOnInit(){
@@ -698,95 +715,92 @@ export class HomeContentComponent {
       (profile) => (this.profileJson = JSON.stringify(profile, null, 2))
     );
 
+    this._configservice.getScheduleData().subscribe( (data)  => {
+      this.dataArray = data
+      console.log(data);
+    });
     // removed until connecting to db
     //this._configservice.getcourses().subscribe(data => this.dataArray = data);
-    this.dataArray = [
-      {
-        "catalog_nbr": "1021B",
-        "subject": "ACTURSCI",
-        "className": "INTRO TO FINANCIAL SECURE SYS",
-        "course_info": [
-          {
-            "class_nbr": 5538,
-            "start_time": "8:30 AM",
-            "descrlong": "",
-            "end_time": "9:30 AM",
-            "campus": "Main",
-            "facility_ID": "PAB-106",
-            "days": [
-              "M",
-              "W",
-              "F"
-            ],
-            "instructors": [],
-            "class_section": "001",
-            "ssr_component": "LEC",
-            "enrl_stat": "Not full",
-            "descr": "RESTRICTED TO YR 1 STUDENTS."
-          }
-        ],
-        "catalog_description": "The nature and cause of financial security and insecurity; public, private and employer programs and products to reduce financial insecurity, including social security, individual insurance and annuities along with employee pensions and benefits.\n\nExtra Information: 3 lecture hours."
-      },
-      {
-        "catalog_nbr": 2053,
-        "subject": "ACTURSCI",
-        "className": "MATH FOR FINANCIAL ANALYSIS",
-        "course_info": [
-          {
-            "class_nbr": 1592,
-            "start_time": "11:30 AM",
-            "descrlong": "Prerequisite(s):1.0 course or two 0.5 courses at the 1000 level or higher from Applied Mathematics, Calculus, or Mathematics.",
-            "end_time": "12:30 PM",
-            "campus": "Main",
-            "facility_ID": "NCB-113",
-            "days": [
-              "M",
-              "W",
-              "F"
-            ],
-            "instructors": [],
-            "class_section": "001",
-            "ssr_component": "LEC",
-            "enrl_stat": "Full",
-            "descr": ""
-          }
-        ],
-        "catalog_description": "Simple and compound interest, annuities, amortization, sinking funds, bonds, bond duration, depreciation, capital budgeting, probability, mortality tables, life annuities, life insurance, net premiums and expenses. Cannot be taken for credit in any module in Statistics or Actuarial Science, Financial Modelling or Statistics, other than the minor in Applied Financial Modeling.\n\nAntirequisite(s): Actuarial Science 2553A/B.\n\nExtra Information: 3 lecture hours."
-      },
-      {
-        "catalog_nbr": "2427B",
-        "subject": "ACTURSCI",
-        "className": "LONG TERM ACTUARIAL MATH I",
-        "course_info": [
-          {
-            "class_nbr": 2663,
-            "start_time": "12:30 PM",
-            "descrlong": "Prerequisite(s): A minimum mark of 60% in each of Actuarial Science 2553A/B, either Calculus 2402A/B or Calculus 2502A/B, and Statistical Sciences 2857A/B. Restricted to students enrolled in any Actuarial Science module.",
-            "end_time": "1:30 PM",
-            "campus": "Main",
-            "facility_ID": "MC-105B",
-            "days": [
-              "M",
-              "W",
-              "F"
-            ],
-            "instructors": [],
-            "class_section": "001",
-            "ssr_component": "LEC",
-            "enrl_stat": "Not full",
-            "descr": ""
-          }
-        ],
-        "catalog_description": "Models for the time until death, single life annuity and life insurance present values and their probability distributions; introduction to equivalence principle and premium calculations.\n\nExtra Information: 3 lecture hours, 1 tutorial hour."
-      },
-    ];
+
+    // this.dataArray = [
+    //   {
+    //     "catalog_nbr": "1021B",
+    //     "subject": "ACTURSCI",
+    //     "className": "INTRO TO FINANCIAL SECURE SYS",
+    //     "course_info": [
+    //       {
+    //         "class_nbr": 5538,
+    //         "start_time": "8:30 AM",
+    //         "descrlong": "",
+    //         "end_time": "9:30 AM",
+    //         "campus": "Main",
+    //         "facility_ID": "PAB-106",
+    //         "days": [
+    //           "M",
+    //           "W",
+    //           "F"
+    //         ],
+    //         "instructors": [],
+    //         "class_section": "001",
+    //         "ssr_component": "LEC",
+    //         "enrl_stat": "Not full",
+    //         "descr": "RESTRICTED TO YR 1 STUDENTS."
+    //       }
+    //     ],
+    //     "catalog_description": "The nature and cause of financial security and insecurity; public, private and employer programs and products to reduce financial insecurity, including social security, individual insurance and annuities along with employee pensions and benefits.\n\nExtra Information: 3 lecture hours."
+    //   },
+    //   {
+    //     "catalog_nbr": 2053,
+    //     "subject": "ACTURSCI",
+    //     "className": "MATH FOR FINANCIAL ANALYSIS",
+    //     "course_info": [
+    //       {
+    //         "class_nbr": 1592,
+    //         "start_time": "11:30 AM",
+    //         "descrlong": "Prerequisite(s):1.0 course or two 0.5 courses at the 1000 level or higher from Applied Mathematics, Calculus, or Mathematics.",
+    //         "end_time": "12:30 PM",
+    //         "campus": "Main",
+    //         "facility_ID": "NCB-113",
+    //         "days": [
+    //           "M",
+    //           "W",
+    //           "F"
+    //         ],
+    //         "instructors": [],
+    //         "class_section": "001",
+    //         "ssr_component": "LEC",
+    //         "enrl_stat": "Full",
+    //         "descr": ""
+    //       }
+    //     ],
+    //     "catalog_description": "Simple and compound interest, annuities, amortization, sinking funds, bonds, bond duration, depreciation, capital budgeting, probability, mortality tables, life annuities, life insurance, net premiums and expenses. Cannot be taken for credit in any module in Statistics or Actuarial Science, Financial Modelling or Statistics, other than the minor in Applied Financial Modeling.\n\nAntirequisite(s): Actuarial Science 2553A/B.\n\nExtra Information: 3 lecture hours."
+    //   },
+    //   {
+    //     "catalog_nbr": "2427B",
+    //     "subject": "ACTURSCI",
+    //     "className": "LONG TERM ACTUARIAL MATH I",
+    //     "course_info": [
+    //       {
+    //         "class_nbr": 2663,
+    //         "start_time": "12:30 PM",
+    //         "descrlong": "Prerequisite(s): A minimum mark of 60% in each of Actuarial Science 2553A/B, either Calculus 2402A/B or Calculus 2502A/B, and Statistical Sciences 2857A/B. Restricted to students enrolled in any Actuarial Science module.",
+    //         "end_time": "1:30 PM",
+    //         "campus": "Main",
+    //         "facility_ID": "MC-105B",
+    //         "days": [
+    //           "M",
+    //           "W",
+    //           "F"
+    //         ],
+    //         "instructors": [],
+    //         "class_section": "001",
+    //         "ssr_component": "LEC",
+    //         "enrl_stat": "Not full",
+    //         "descr": ""
+    //       }
+    //     ],
+    //     "catalog_description": "Models for the time until death, single life annuity and life insurance present values and their probability distributions; introduction to equivalence principle and premium calculations.\n\nExtra Information: 3 lecture hours, 1 tutorial hour."
+    //   },
+    // ];
   };
 }
-
-/* course list format :
-
-scheduleName: [ { COURSEOBJ1 }, { COURSEOBJ2 }, {COURSEOBJ3}]
-// just an array of course objects^
-
-*/
-

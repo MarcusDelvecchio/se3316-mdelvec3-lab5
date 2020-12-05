@@ -82,97 +82,28 @@ const checkJwt = jwt({
   algorithms: ["RS256"],
 });
 
-/*
-// getting db collection items
-router.get('/api/get-data', function(req, res, next){
-  var resultArry = [];
-  mongo.connect(url, function(err, db){ // try to connect to url and pass in function to run once connected or failed
-    assert.equal(null, err);  // ensure error is null
-    
-    var cursor = db.collection('courses').find();
-    cursor.array.forEach(element => {
-      assert.equal(null, err); // might break in other cases if we have items with no contents?
-      resultArry.push(element);
-    }, function(){
-      db.close();
-      //res.render('' render a page AFTER the content is sure to be receieved
-    });
-  })
-});
-
-// change 'insert' to something more specific but doing this now as template for insert
-// OLD
-router.post('/api/:user/writeData', function(req, res, next){
-
-  var itemToInsert = {
-    property1: req.body.property1,
-    property2: req.body.property2,
-  };
-
-  // inserting the item
-  mongo.connect(url, function(err, db){ // try to connect to url and pass in function to run once connected or failed
-    assert.equal(null, err);  // ensure error is null
-
-    db.collection("courses").insertOne(item, function(err, result){ // specifying the collection in the db to insert into, the item to insert, and callback to be called
-      assert.equal(null, err);
-      console.log("Item inserted");
-      db.close();
-    }); 
-  })
-  
-});
-
-app.get("/api/messages/public-message", (req, res) => {
-  res.send({
-    message: "The API doesn't require an access token to share this message.",
-  });
-});
-
-app.get("/api/messages/protected-message", checkJwt, (req, res) => {
-  res.send({
-    message: "The API successfully validated your access token.",
-  });
-});
-*/
-
 // write data to PRIVATE collection
 app.post("/api/user/update-data"/*, checkJwt*/, (req, res)=> {
   res.setHeader('Access-Control-Allow-Origin', 'http://localhost:7000');
 
   // get user from body
-    //let username = req.body.user; set user once you pass in scheduleDataInfo
-    // todo add username after posting scheduleDataInfo
-
-  // **todo very user is unique?**
+    let username = req.body.user; //set user once you pass in scheduleDataInfo
+  
+  // **todo ensure user is unique?**
 
   // user specific data to be sent to user specific collection
     let privateScheduleData = req.body;
+  
+  // delete the user property because we no longer need it
+    delete privateScheduleData.user
     console.log(req.body);
-    console.log(req.body.scheduledataInfo);
-    let name = req.body.scheduledataInfo["test"].creator;
-    //console.log(name);
 
-    /*let userData = {
-      scheduleDataInfo: {
-        description: req.body.description,
-        modified: req.body.modified,  
-        length: req.body.description,
-        creator: req.body.creator,
-        expanded: req.body.expanded,
-        visibility: req.body.visibility,
-      },
-      scheduleData: {
-
-      }
-    }*/
-    //req.body;
-    //delete userData.user; NOT DOING THIS ANYMORE USER IS PASSED IN SCHEDULEDATAINFO AS "CREATOR"
-
-      // todo delete unneeded properties like expanded?
+  // todo delete unneeded properties like expanded?
+      // need to add it back after getting so save for later
 
     return mongoClient.connect()
-    .then(() => { // todo add username after posting scheduleDataInfo
-        mongoClient.db("db-name").collection("test").insertOne(privateScheduleData);
+    .then(() => { 
+        mongoClient.db("db-name").collection(username).insertOne(privateScheduleData);
         return res.status(201).send(privateScheduleData); // token here maybe?
     })
     .catch(err => {
@@ -182,33 +113,70 @@ app.post("/api/user/update-data"/*, checkJwt*/, (req, res)=> {
 });
 
 // write data to PUBLIC collection
-  app.post("/api/public/update-data", checkJwt, (req, res)=> {
+  app.post("/api/public/update-data"/*, checkJwt*/, (req, res)=> {
 
-    // public data to be sent to public collection
+      // get user from body
+      let username = req.body.user; //set user once you pass in scheduleDataInfo
+  
+      // **todo ensure user is unique?**
     
-    let publicData = {
-      publicSchedules: null // reau.body....
-      // ...
-    }
+      // user specific data to be sent to user specific collection
+        let publicScheduleData = req.body;
+      
+      // delete the user property because we no longer need it
+        delete publicScheduleData.user
+        console.log(req.body);
+    
+      // todo delete unneeded properties like expanded?
+          // need to add it back after getting so save for later
+    
+        return mongoClient.connect()
+        .then(() => { 
+            mongoClient.db("db-name").collection("public-schedules").insertOne(publicScheduleData);
+            return res.status(201).send(publicScheduleData); // token here maybe?
+        })
+        .catch(err => {
+            console.log("Error storing user\n",err);
+            return res.status(500).send("Failed to store user info.");
+        });
+  });
 
-    // *** might need to stringify data **
-      // todo
-    
-    /* public collection includes:
-     *    - user reviews
-     *    - pbulic course lists
-     * 
-     */
+  app.get("/api/user/scheduleData", (req, res) => {
 
     return mongoClient.connect()
-    .then(() => {
-        mongoClient.db("db-name").collection("public").insertOne(publicData);
-        return res.status(201).send(body); // token here maybe?
-    })
-    .catch(err => {
-        console.log("Error storing user\n",err);
-        return res.status(500).send("Failed to store user info.");
-    });
+      .then( () => {
+        const scheduleCollection = mongoClient.db("db-name").collection("public-schedules").find();
+
+        return new Promise((resolve, reject) => {
+          scheduleData = {};
+
+          scheduleCollection.forEach( e => {
+            console.log(e);
+            scheduleData["scheduleDataInfo"] = e.scheduleDataInfo;
+            scheduleData["scheduleData"] = e.scheduleData;
+          }, 
+          () => {   // callback executed after forEach
+            scheduleCollection.close();
+            
+            if(scheduleData){
+              console.log(scheduleData);
+              resolve(scheduleData);  
+            }
+            else{
+              reject("could not get data");
+            }
+          });
+        })
+        }).then( (scheduleData) => {
+          return res.status(201).send(scheduleData);
+        }).catch((error) => {
+          console.log(error);
+          return res.status(400).send();
+        })
+      .catch(error => {
+        console.log("could not connect to db");
+      });
+  
   });
 
 /*
