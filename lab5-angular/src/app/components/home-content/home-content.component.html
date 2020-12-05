@@ -300,7 +300,7 @@
                       Courses:
                       <ul>
                         <li *ngFor="let course of scheduleData[courseList.key] | keyvalue"> <!-- i think this is breaking bc the hard coded courses in scheduleDataInfo dont match those in scheduleData but it will work later-->
-                          {{ course.value["subject"] }} {{ course.value["catalog_nbr"] }} <button (click)="removeCourseFromList(courseList.key, course['catalog_nbr'])">remove</button>
+                          {{ course.value["subject"] }} {{ course.value["catalog_nbr"] }} <button (click)="removeCourseFromList(courseList.key, course.value['catalog_nbr'])">remove</button>
                         </li>
                       </ul>
                     </td>

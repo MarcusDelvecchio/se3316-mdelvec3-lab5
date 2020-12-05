@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ɵConsole } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
@@ -387,13 +387,10 @@ export class HomeContentComponent {
     let b_dateString = b.value.modified
     let a_date = new Date(a_dateString);
     let b_date = new Date(b_dateString);
-    console.log("order by date");
-    //return a;
-    console.log(b_date.getTime());
-    console.log(a_date.getTime());
     let aTIME = a_date.getTime();
     let bTIME = b_date.getTime();
-    //return (aTIME > bTIME ? a : b);
+
+    // order by decending date (epoc time)
     return aTIME > bTIME ? -1 : (bTIME > aTIME ? 1 : 0);
   }
 
@@ -662,18 +659,29 @@ export class HomeContentComponent {
   }
 
   removeCourseFromList(courseList: string, catalogNumber: string){
-    for(let i = 0; i< this.scheduleData[courseList].length; i++){
+    // check if user is logged in
+    // check if course list belongs to them 
+
+    console.log(courseList);
+    console.log(catalogNumber);
+    for(let i = 0; i< Object.keys(this.scheduleData[courseList]).length; i++){
       if(this.scheduleData[courseList][i]["catalog_nbr"] == catalogNumber){
-        delete this.scheduleData[courseList][i];
+        console.log(this.scheduleData[courseList][i]);  
+        this.scheduleDataInfo[courseList].length--;
+        this.selectedCourses.splice(i, 1);
       }
     }
-    console.log(this.scheduleData[courseList]);
+    this.updateDb()
   }
 
   // update user data in database
   updateDb(){
-    console.log("db updated");
     let profile = JSON.parse(this.profileJson);
+    
+    if(!profile){
+      alert("you must sign in to access this functionality");
+      return;
+    }
     let user = profile.name
     
     // data to be sent to db
@@ -686,6 +694,10 @@ export class HomeContentComponent {
         scheduleData: {},
         scheduleDataInfo: {}
       };
+
+    // log
+      console.log("scheduleData being posted:");
+      console.log(this.scheduleData);
 
     // creating public and private course list data to send in request
 
@@ -700,7 +712,6 @@ export class HomeContentComponent {
             
             // setting corresponding schedule data INFO
             privateScheduleData["scheduleDataInfo"][Object.keys(this.scheduleDataInfo)[i]] = this.scheduleDataInfo[Object.keys(this.scheduleDataInfo)[i]];
-            console.log(privateScheduleData);
           }
 
         // else if, add course to publicScheduleData{}
@@ -712,7 +723,6 @@ export class HomeContentComponent {
 
             // setting corresponding schedule data INFO 
             publicScheduleData["scheduleDataInfo"][Object.keys(this.scheduleDataInfo)[i]] = this.scheduleDataInfo[Object.keys(this.scheduleDataInfo)[i]];
-            console.log(publicScheduleData);
           }
           else{
             console.log("ERROR COURSE LIST VISIBILITY NOT SET");
@@ -725,11 +735,14 @@ export class HomeContentComponent {
 
     // post to public db
       
-      this._configservice.postPublicScheduleData(publicScheduleData).subscribe(response => console.log(response));
+      this._configservice.postPublicScheduleData(publicScheduleData).subscribe();
 
     // post to private db
 
-      this._configservice.postPrivateScheduleData(privateScheduleData).subscribe(response => console.log(response));
+      this._configservice.postPrivateScheduleData(privateScheduleData).subscribe();
+
+    // log
+      console.log("db updated");
   }
 
   ngOnInit(){
@@ -761,7 +774,6 @@ export class HomeContentComponent {
         // add scheduleDataInfo from returned data to our schedule data info
 
           if(key == "scheduleDataInfo"){
-            console.log("key is scheduleDataInfo")
             for(let i = 0; i< Object.keys(data[key]).length; i++){
               this.scheduleDataInfo[Object.keys(data[key])[i]] = data["scheduleDataInfo"][Object.keys(data["scheduleDataInfo"])[i]]; 
               // this.scheduleDataInfo[ SCHEDULE NAME ] = collectionItem["scheduleDataInfo"] VALUE
@@ -771,7 +783,6 @@ export class HomeContentComponent {
         // add scheduleData from returned data to our schedule data 
         
           else if(key == "scheduleData"){
-            console.log("key is scheduleData")
             for(let i = 0; i< Object.keys(data[key]).length; i++){
               this.scheduleData[Object.keys(data[key])[i]] = data["scheduleData"][Object.keys(data["scheduleData"])[i]]; 
               // this.scheduleData[ SCHEDULE NAME ] = collectionItem["scheduleData"] VALUE
@@ -782,8 +793,12 @@ export class HomeContentComponent {
             console.log("something broked returned data has more than scheduleDataInfo and scheduleData properties");
           }
       }
-      console.log(this.scheduleDataInfo);
-      console.log(this.scheduleData);
+      // setting all courses expanded to false
+      for(let courseList of Object.keys(this.scheduleDataInfo)){
+        this.scheduleDataInfo[courseList].expanded = false;
+      }
+      // console.log(this.scheduleDataInfo);
+      // console.log(this.scheduleData);
     });
   };
 }
