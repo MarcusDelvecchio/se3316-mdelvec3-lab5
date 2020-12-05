@@ -63,58 +63,62 @@ app.use(cors({ origin: appOrigin }));
 
 // "you can generate a secret provider that will provide the right signing key to 
 //  express-jwt based on the kid in the JWT header"
+
+// part of the API that will connect with auth) and verify the token with the audience
 const checkJwt = jwt({
   secret: jwksRsa.expressJwtSecret({
-    cache: true,
-    rateLimit: true,
-    jwksRequestsPerMinute: 5,
-    jwksUri: `${issuer}.well-known/jwks.json`,
-    handleSigningKeyError: (err, cb) => {
-      if (err instanceof jwksRsa.SigningKeyNotFoundError) {
-        return cb(new Error('This is bad'));
+      cache: true,
+      rateLimit: true,
+      jwksRequestsPerMinute: 20,
+      jwksUri: `${issuer}.well-known/jwks.json`,
+      handleSigningKeyError: (err, cb) => {
+        if (err instanceof jwksRsa.SigningKeyNotFoundError) {
+          return cb(new Error('This is bad'));
+        }
+        return cb(err);
       }
-      return cb(err);
-    }
-    
-  }),
-
-  audience: audience,
-  issuer: issuer,
-  algorithms: ["RS256"],
+}),
+audience: 'http://lab5-angular',
+issuer: 'https://dev-lrzuaei7.us.auth0.com/',
+algorithms: ['RS256']
 });
+
+// NOTE: every (protected) route with checkJwt must be added to allowedList[] in app.module.ts AuthModule.forRoot
 
 // write data to PRIVATE collection
-app.post("/api/user/update-data"/*, checkJwt*/, (req, res)=> {
-  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:7000');
 
-  // get user from body
-    let username = req.body.user; //set user once you pass in scheduleDataInfo
-  
-  // **todo ensure user is unique?**
+  app.post("/api/user/update-data", checkJwt, (req, res)=> {
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:7000');
 
-  // user specific data to be sent to user specific collection
-    let privateScheduleData = req.body;
-  
-  // delete the user property because we no longer need it
-    delete privateScheduleData.user
-    console.log(req.body);
+    // get user from body
+      let username = req.body.user; //set user once you pass in scheduleDataInfo
+    
+    // **todo ensure user is unique?**
 
-  // todo delete unneeded properties like expanded?
-      // need to add it back after getting so save for later
+    // user specific data to be sent to user specific collection
+      let privateScheduleData = req.body;
+    
+    // delete the user property because we no longer need it
+      delete privateScheduleData.user
+      console.log(req.body);
 
-    return mongoClient.connect()
-    .then(() => { 
-        mongoClient.db("db-name").collection(username).insertOne(privateScheduleData);
-        return res.status(201).send(privateScheduleData); // token here maybe?
-    })
-    .catch(err => {
-        console.log("Error storing user\n",err);
-        return res.status(500).send("Failed to store user info.");
-    });
-});
+    // todo delete unneeded properties like expanded?
+        // need to add it back after getting so save for later
+
+      return mongoClient.connect()
+      .then(() => { 
+          mongoClient.db("db-name").collection(username).insertOne(privateScheduleData);
+          return res.status(201).send(privateScheduleData); // token here maybe?
+      })
+      .catch(err => {
+          console.log("Error storing user\n",err);
+          return res.status(500).send("Failed to store user info.");
+      });
+  });
 
 // write data to PUBLIC collection
-  app.post("/api/public/update-data"/*, checkJwt*/, (req, res)=> {
+
+  app.post("/api/public/update-data", checkJwt, (req, res)=> {
 
       // get user from body
       let username = req.body.user; //set user once you pass in scheduleDataInfo
@@ -148,6 +152,8 @@ app.post("/api/user/update-data"/*, checkJwt*/, (req, res)=> {
     res.send(timetable)
   })
 
+// GET public api data ( no need to be authorized, no jwtCheck to check token)
+  
   app.get("/api/public/scheduleData", (req, res) => {
 
     return mongoClient.connect()
@@ -185,8 +191,9 @@ app.post("/api/user/update-data"/*, checkJwt*/, (req, res)=> {
       });
   });
 
-  // get PRIVATE course list data (with username reoute param)
-  app.get("/api/:username/scheduleData", (req, res) => {
+// get PRIVATE course list data (with username reoute param)
+
+  app.get("/api/:username/scheduleData", checkJwt, (req, res) => {
 
     let username = req.params.username;
 
@@ -223,66 +230,6 @@ app.post("/api/user/update-data"/*, checkJwt*/, (req, res)=> {
         console.log("could not connect to db");
       });
   });
-
-
-/*
-app.get("/api/user/signIn", checkJwt, (req, res)=> {
-
-  // validating user exists
-    const valideUserExists = mongoClient.connect()
-    .then(() => {
-
-        let userExists = false;
-
-        const dbCollection = mongoClient.db("db-name").collection("users").find();
-        collection.forEach(e => {
-                if (e.username === body.username) {
-                    userExists = true;
-                }
-            },
-            () => {
-                collection.close();
-                return userExists;
-        });
-        return userExists;
-    })
-    .catch(err => {
-        console.log(err);
-    });
-    return userExistsValidation
-      .then(() => {
-          if (userExistsValidation) {
-              return res.status(400).send(`${req.body.username} already exists!`);
-          }
-      // hash password
-          return bcrypt.hash(body.password, 10)
-              .then(hashedPassword => {
-
-                  body.password = hashedPassword;
-
-              // store hashed password to db
-                  return mongoClient.connect()
-                      .then(() => {
-                          mongoClient.db("db-name").collection("users").insertOne(body);
-                          return res.status(201).send(body); // token here maybe?
-                      })
-                      .catch(err => {
-                          console.log("Error storing user\n",err);
-                          return res.status(500).send("Failed to store user info.");
-                      });
-              })
-              .catch(err => {
-                  console.log("Error hashing with bcrypt\n", err);
-                  return res.status(500).send("Failed to hash and store password.");
-              });
-      })
-      .catch(err => {
-          console.log("Error when checking username uniqueness",err);
-          return res.status(500).send("Failed to verifiy username.");
-      });
-
-  });
-*/
 
 app.listen(port, () => console.log(`API Server listening on port ${port}`));
 

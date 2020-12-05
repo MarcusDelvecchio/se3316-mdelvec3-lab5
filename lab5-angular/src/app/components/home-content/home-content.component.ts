@@ -373,7 +373,7 @@ export class HomeContentComponent {
       }
 
     // check that course list belongs to that user
-      if(!this.scheduleDataInfo[this.activeScheduleName].creator != this.profile.name){
+      if(this.scheduleDataInfo[this.activeScheduleName].creator != this.profile.name){
         alert("you cannot edit a schedule that you did not create");
         return;
       }
@@ -422,19 +422,12 @@ export class HomeContentComponent {
 
   renderTimeTable(){
 
-    // removed bc active schedule drop down no longer the method to render schedules/ course lists
-    /*if((document.getElementById("scheduleDropDown") as HTMLInputElement).value == "none"){
-      alert("You must choose an active schedule to render a time table");
+    if(this.activeScheduleName == undefined || this.activeScheduleName == "" || this.activeScheduleName == null){
+      alert("Select a schedule from the drop down or click one in the schedule list to render it");
       return;
-    }*/
-
-    /*if(this.activeSchedule.length == 0){
-      alert("Cannot render an empty schedule");
-      return;
-    }*/
+    }
 
     this.renderedSchedule = this.activeScheduleName;
-
 
     /*convert activeSchedule (array of objects) to organized object of format:
     timeBasedSchedule = {
@@ -610,6 +603,7 @@ export class HomeContentComponent {
     delete this.scheduleData[name];
     delete this.scheduleDataInfo[name];
     this.activeSchedule = undefined;
+    this.activeScheduleName = undefined;
     this.showTimeTable = false;
     this.editingCourseList = false;
     this.showEditButton = false;
@@ -802,6 +796,7 @@ export class HomeContentComponent {
         let profileJson = JSON.stringify(profile, null, 2);
         this.profile = JSON.parse(profileJson);
         console.log(this.profile);
+        console.log(this.profile)
     });
 
     // getting course data to populate tables with

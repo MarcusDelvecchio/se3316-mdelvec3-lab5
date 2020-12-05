@@ -1,6 +1,6 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -12,9 +12,8 @@ import { NavBarComponent } from './components/nav-bar/nav-bar.component';
 import { HomeContentComponent } from './components/home-content/home-content.component';
 import { HomeComponent } from './pages/home/home.component';
 import { ProfileComponent } from './pages/profile/profile.component';
-//import { ExternalApiComponent } from './pages/external-api/external-api.component';
 
-import { AuthModule } from '@auth0/auth0-angular';
+import { AuthModule, AuthHttpInterceptor } from '@auth0/auth0-angular';
 import { environment as env } from '../environments/environment';
 import { LoginButtonComponent } from './components/login-button/login-button.component';
 import { LogoutButtonComponent } from './components/logout-button/logout-button.component';
@@ -32,7 +31,6 @@ import { FormsModule } from '@angular/forms';
     NavBarComponent,
     HomeComponent,
     ProfileComponent,
-    //ExternalApiComponent,
     LoginButtonComponent,
     LogoutButtonComponent,
   ],
@@ -44,10 +42,24 @@ import { FormsModule } from '@angular/forms';
     FormsModule,
     AuthModule.forRoot({
       ...env.auth,
+      httpInterceptor: {
+        // pass in list of Urls to add the token to
+        // these are the Urls we are going to protect
+        allowedList: [
+          `${env.dev.apiUrl}/api/public/update-data`,
+          `${env.dev.apiUrl}/api/:username/scheduleData`,
+          `${env.dev.apiUrl}/api/user/update-data`,
+        ],
+      },
     }),
   ],
   providers: [
-    ConfigService
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthHttpInterceptor,
+      multi: true,
+    },
+    ConfigService,
   ],
   bootstrap: [AppComponent],
 })

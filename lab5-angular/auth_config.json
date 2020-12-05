@@ -1,6 +1,6 @@
 {
   "domain": "dev-lrzuaei7.us.auth0.com",
   "clientId": "GXRiFyWhG56vQm3aaY6Z98Ru4UUj6VZd",
-  "audience": "http://your-audience-identifier",
+  "audience": "http://lab5-angular",
   "apiUrl": "http://localhost:7000"
 }
