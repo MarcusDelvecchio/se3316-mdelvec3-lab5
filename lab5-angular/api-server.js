@@ -13,24 +13,38 @@ const jwksRsa = require("jwks-rsa");
 // "using expressJwtSecret we can generate a secret provider that will provide the right 
 // signing key to express-jwt based on the kid in the JWT header"
 
-const mongo = require("mongodb");
+// body parsing
+const bodyParser = require('body-parser');
+
 const asser = require("assert");
 const { assert } = require("console");
-const { MongoClient } = require('mongodb').MongoClient;
+const MongoClient = require('mongodb').MongoClient;
+const mongo = require("mongodb"); // old method?
 
 const app = express();
+
+// bpdy parsing
+app.use(express.json());  // for parsing application/json objects passed in POST bodies
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
 
 const port = 7000 || process.env.API_PORT;
 const appOrigin = process.env.APP_ORIGIN;
 const audience = process.env.AUTH0_AUDIENCE;
 const issuer = process.env.AUTH0_ISSUER;
 
+const uri = "mongodb+srv://db-user:4OsKw4RG8hnM9tr6@cluster0.nlcvo.mongodb.net/db-name?retryWrites=true&w=majority";
+const mongoClient = new MongoClient(uri,{ useNewUrlParser: true, useUnifiedTopology: true });
+
 // use this string to connect to the database
 //const dbURI = "mongodb+srv://db-admin-user:dbpass123@cluster0.nlcvo.mongodb.net/lab5-db?retryWrites=true&w=majority";
-const uri = "mongodb+srv://db-user:4OsKw4RG8hnM9tr6@cluster0.nlcvo.mongodb.net/db-name?retryWrites=true&w=majority";
+
 //const url = "mongodb://localhost:7000/db-admin";
-const client = require('mongodb').MongoClient;
-const router = express.Router();
+
+// old
+//const client = require('mongodb').MongoClient;
+//const router = express.Router();
 
 // todo: add issuer and audience?
 if (!issuer || !audience) {
@@ -42,9 +56,9 @@ app.use(helmet());
 app.use(cors({ origin: appOrigin }));
 
 
-router.get('/api/get-course-data', function(req,res,next){
+/*router.get('/api/get-course-data', function(req,res,next){
   
-});
+});*/
 
 // "you can generate a secret provider that will provide the right signing key to 
 //  express-jwt based on the kid in the JWT header"
@@ -122,29 +136,44 @@ app.get("/api/messages/protected-message", checkJwt, (req, res) => {
 */
 
 // write data to PRIVATE collection
-app.post("/api/user/update-data", checkJwt, (req, res)=> {
+app.post("/api/user/update-data"/*, checkJwt*/, (req, res)=> {
+  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:7000');
 
   // get user from body
-  let username = req.body.user;
+    //let username = req.body.user; set user once you pass in scheduleDataInfo
+    // todo add username after posting scheduleDataInfo
 
   // **todo very user is unique?**
 
   // user specific data to be sent to user specific collection
-    
-    let userData = req.body;
-    delete userData.user; // remove user property from body bc we don't need it anymore
+    let privateScheduleData = req.body;
+    console.log(req.body);
+    console.log(req.body.scheduledataInfo);
+    let name = req.body.scheduledataInfo["test"].creator;
+    //console.log(name);
 
-    // todo delete unneeded properties like expanded?
+    /*let userData = {
+      scheduleDataInfo: {
+        description: req.body.description,
+        modified: req.body.modified,  
+        length: req.body.description,
+        creator: req.body.creator,
+        expanded: req.body.expanded,
+        visibility: req.body.visibility,
+      },
+      scheduleData: {
 
-  // *** might need to stringify data **
-      // todo
+      }
+    }*/
+    //req.body;
+    //delete userData.user; NOT DOING THIS ANYMORE USER IS PASSED IN SCHEDULEDATAINFO AS "CREATOR"
 
-  // write data to USER SPECIFIC collection (will create if one not existing)
-    
+      // todo delete unneeded properties like expanded?
+
     return mongoClient.connect()
-    .then(() => {
-        mongoClient.db("db-name").collection(username).insertOne(userData);
-        return res.status(201).send(body); // token here maybe?
+    .then(() => { // todo add username after posting scheduleDataInfo
+        mongoClient.db("db-name").collection("test").insertOne(privateScheduleData);
+        return res.status(201).send(privateScheduleData); // token here maybe?
     })
     .catch(err => {
         console.log("Error storing user\n",err);
