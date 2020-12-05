@@ -19,7 +19,6 @@ export class ConfigService {
   private POSTpublicScheduleDataString: string = "http://localhost:" + this.port + "/api/public/update-data";
   private POSTprivateScheduleDataString: string = "http://localhost:" + this.port + "/api/user/update-data";
   private GETPublicScheduleDataString: string = "http://localhost:" + this.port + "/api/public/scheduleData";
-  private GETPrivateScheduleDataString: string = "http://localhost:" + this.port + "/api/private/scheduleData";
 
   constructor(private http: HttpClient) {}
 
@@ -41,8 +40,9 @@ export class ConfigService {
       return this.http.get<any[]>(this.GETPublicScheduleDataString);
     };
 
-    getPrivateScheduleData(): Observable<scheduleResponse[]> {  // observable type any?
-      return this.http.get<any[]>(this.GETPrivateScheduleDataString);
+    getPrivateScheduleData(username): Observable<scheduleResponse[]> {  // observable type any?
+      let GETPrivateScheduleDataString: string = "http://localhost:" + this.port + "/api/" + username + "/scheduleData";
+      return this.http.get<any[]>(GETPrivateScheduleDataString);
     };
 
     renderTableData(){};
@@ -84,7 +84,7 @@ export class HomeContentComponent {
   cannotRenderEmpty; // true if the course selected from the list is empty so a message is displayed instead of an empty time table
   showEditButton; // set to true when a course is selected from the list so the edit button appears
   port;
-  profileJson = null; // user profile data (set on ngOnInit) -> promise recieved from user data
+  profile = null; // user profile data (set on ngOnInit) -> promise recieved from user data
 
   constructor(private _configservice:ConfigService, public auth: AuthService){
     this.showInfoTable = false;
@@ -291,7 +291,7 @@ export class HomeContentComponent {
 
   createSchedule(){
     let name: string = this.scheduleNameInput;
-    let user = JSON.parse(this.profileJson).name
+    let user = this.profile.name
     let description: string = (document.getElementById("scheduleDescription") as HTMLInputElement).value;
     let visiblity: string = (document.getElementById("visibilityDropDown") as HTMLInputElement).value;
     let currentTime = new Date();
@@ -348,12 +348,12 @@ export class HomeContentComponent {
   }
 
   scheduleSelected(scheduleName: string){
-    
     let name = scheduleName;
+
     try{
       this.activeSchedule = this.scheduleData[name];
       this.activeScheduleName = name;
-      //console.log("Active schedule changed to " + name);
+      console.log("Active schedule changed to " + name);
     }catch(error){
       console.log("Something went wrong; schedule name cannot be found in data");
     }
@@ -365,6 +365,19 @@ export class HomeContentComponent {
       alert("Please select a schedule to add courses to it.")
       return;
     }
+
+    // check if user is logged in
+      if(!this.profile){
+        alert("you must sign in to access this functionality");
+        return;
+      }
+
+    // check that course list belongs to that user
+      if(!this.scheduleDataInfo[this.activeScheduleName].creator != this.profile.name){
+        alert("you cannot edit a schedule that you did not create");
+        return;
+      }
+
     let activeSchedule = this.activeSchedule;
     let name = this.activeScheduleName;
     let numberOfCourses = this.selectedCourses.length;
@@ -578,6 +591,7 @@ export class HomeContentComponent {
 
   courseListSelected(name: string){
     if(Object.keys(this.scheduleData[name]).length == 0){
+      console.log("active schedule set to" + name);
       this.showEditButton = true;
       this.cannotRenderEmpty = true;
       this.renderedSchedule = name;
@@ -597,11 +611,26 @@ export class HomeContentComponent {
     delete this.scheduleDataInfo[name];
     this.activeSchedule = undefined;
     this.showTimeTable = false;
+    this.editingCourseList = false;
+    this.showEditButton = false;
     console.log(this.scheduleData);
     //todo write to database to delete
   }
 
   toggleEditCourseList(){
+
+    // check if user is logged in
+      if(!this.profile){
+        alert("you must sign in to access this functionality");
+        return;
+      }
+  
+    // check that course list belongs to that user
+      if(this.scheduleDataInfo[this.activeScheduleName].creator != this.profile.name){
+        alert("you cannot edit a schedule that you did not create");
+        return;
+      }
+
     if(this.editingCourseList){
       this.editingCourseList = false;
     }else{
@@ -617,50 +646,71 @@ export class HomeContentComponent {
     var newScheduleDataInfoObject = {};
 
     // if nothing has chnaged
-    if(newName == this.activeScheduleName && newDesc == this.scheduleDataInfo[this.activeScheduleName].description && newVisibility == this.scheduleDataInfo[this.activeScheduleName].visibility){
-      this.editingCourseList = false;
-      return;
-    }
+
+      if(newName == this.activeScheduleName && newDesc == this.scheduleDataInfo[this.activeScheduleName].description && newVisibility == this.scheduleDataInfo[this.activeScheduleName].visibility){
+        this.editingCourseList = false;
+        return;
+      }
+      
     // else, something has changed
 
-      // check is description changed
-      if(newDesc != this.scheduleDataInfo[this.activeScheduleName].description){
-        newScheduleDataInfoObject["description"] = newDesc;
-      }else{
-        newScheduleDataInfoObject["description"] = this.scheduleDataInfo[this.activeScheduleName].description;
-      }
+      // check if description changed
 
-      if(newVisibility != this.scheduleDataInfo[this.activeScheduleName].visibility){
-        newScheduleDataInfoObject["visibility"] = newVisibility;
-      }else{
-        newScheduleDataInfoObject["visibility"] = this.scheduleDataInfo[this.activeScheduleName].visibility;
-      }
+        if(newDesc != this.scheduleDataInfo[this.activeScheduleName].description){
+          newScheduleDataInfoObject["description"] = newDesc;
+        }else{
+          newScheduleDataInfoObject["description"] = this.scheduleDataInfo[this.activeScheduleName].description;
+        }
+
+      // check if visibility changed
+
+        if(newVisibility != this.scheduleDataInfo[this.activeScheduleName].visibility){
+          newScheduleDataInfoObject["visibility"] = newVisibility;
+        }else{
+          newScheduleDataInfoObject["visibility"] = this.scheduleDataInfo[this.activeScheduleName].visibility;
+        }
+      
+      // update/reset the modified date and creator
+        newScheduleDataInfoObject["modified"] = new Date();
+        newScheduleDataInfoObject["creator"] = this.profile.name;
 
       // and last but not least set the new object to the one we've created and delete the old one
-      if(newName != this.activeScheduleName){
 
-        // replace it in object with schedule info (description, creator, etc.)
-          delete this.scheduleDataInfo[this.activeScheduleName];
-          this.scheduleDataInfo[newName] = newScheduleDataInfoObject; 
+        if(newName != this.activeScheduleName){
 
-        // replace it in object with course data
-          this.scheduleData[newName] = this.scheduleData[this.activeScheduleName];
-          delete this.scheduleData[this.activeScheduleName]; 
+          // replace old info object with new one
+            this.scheduleDataInfo[newName] = newScheduleDataInfoObject; 
+            delete this.scheduleDataInfo[this.activeScheduleName];
+            
+          // replace it in object with course data
+            this.scheduleData[newName] = this.scheduleData[this.activeScheduleName];
+            delete this.scheduleData[this.activeScheduleName]; 
 
-        // set the active schedule to the new one
-        this.activeScheduleName = newName;
-        this.activeSchedule = this.scheduleData[newName];
+          // set the active schedule to the new one
+          this.activeScheduleName = newName;
+          this.activeSchedule = this.scheduleData[newName];
 
-      }else{  // if the name HASNT been changed, simply just replace the existing object with the new one. Nothing changes in the course data object though
-        this.scheduleDataInfo[this.activeScheduleName] = newScheduleDataInfoObject;
-      }
+        }else{  // if the name HASNT been changed, simply just replace the existing object with the new one. Nothing changes in the course data object though
+          this.scheduleDataInfo[this.activeScheduleName] = newScheduleDataInfoObject;
+        }
+      this.updateDb();
       console.log("schedule updated");
       this.editingCourseList = false;
   }
 
   removeCourseFromList(courseList: string, catalogNumber: string){
-    // check if user is logged in
-    // check if course list belongs to them 
+
+  // check if user is logged in
+    if(!this.profile){
+      alert("you must sign in to access this functionality");
+      return;
+    }
+
+  // check that course list belongs to that user
+    if(!this.scheduleDataInfo[courseList].creator != this.profile.user){
+      alert("you cannot edit a schedule that you did not create");
+      return;
+    }
 
     console.log(courseList);
     console.log(catalogNumber);
@@ -676,13 +726,12 @@ export class HomeContentComponent {
 
   // update user data in database
   updateDb(){
-    let profile = JSON.parse(this.profileJson);
     
-    if(!profile){
+    if(!this.profile){
       alert("you must sign in to access this functionality");
       return;
     }
-    let user = profile.name
+    let user = this.profile.name
     
     // data to be sent to db
 
@@ -749,8 +798,11 @@ export class HomeContentComponent {
     console.log("on init called");
 
     this.auth.user$.subscribe(
-      (profile) => (this.profileJson = JSON.stringify(profile, null, 2))
-    );
+      (profile) => { 
+        let profileJson = JSON.stringify(profile, null, 2);
+        this.profile = JSON.parse(profileJson);
+        console.log(this.profile);
+    });
 
     // getting course data to populate tables with
 
@@ -758,47 +810,94 @@ export class HomeContentComponent {
         this.dataArray = data;
       });
     
-    // getting schedule data from backend
-    this._configservice.getPublicScheduleData().subscribe( (data)  => {
-      console.log(data);
+    // getting PUBLIC schedule data from backend
 
-      /* (data) is in the format:
-       *    data = {
-       *      scheduleDataInfo: { {...}, {...}, {...}, ...}
-       *      scheduleData: { {...}, {...}, {...}, ...}
-       *    }                                                   */
+        this._configservice.getPublicScheduleData().subscribe( (data)  => {
+          console.log(data);
+
+          /* (data) is in the format:
+          *    data = {
+          *      scheduleDataInfo: { {...}, {...}, {...}, ...}
+          *      scheduleData: { {...}, {...}, {...}, ...}
+          *    }                                                   */
+          
+          // add to scheduleDataInfo array from scheduleDataInfo (property that's value is the object) in the returned data
+          for(let key of Object.keys(data)){
+
+            // add scheduleDataInfo from returned data to our schedule data info
+              if(key == "scheduleDataInfo"){
+                for(let i = 0; i< Object.keys(data[key]).length; i++){
+                  this.scheduleDataInfo[Object.keys(data[key])[i]] = data["scheduleDataInfo"][Object.keys(data["scheduleDataInfo"])[i]]; 
+                  // this.scheduleDataInfo[ SCHEDULE NAME ] = collectionItem["scheduleDataInfo"] VALUE
+                }
+              }
+
+            // add scheduleData from returned data to our schedule data 
+            
+              else if(key == "scheduleData"){
+                for(let i = 0; i< Object.keys(data[key]).length; i++){
+                  this.scheduleData[Object.keys(data[key])[i]] = data["scheduleData"][Object.keys(data["scheduleData"])[i]]; 
+                  // this.scheduleData[ SCHEDULE NAME ] = collectionItem["scheduleData"] VALUE
+                }
+              }
+
+              else{
+                console.log("something broked returned data has more than scheduleDataInfo and scheduleData properties");
+              }
+            }
+          // setting all courses expanded to false
+          for(let courseList of Object.keys(this.scheduleDataInfo)){
+            this.scheduleDataInfo[courseList].expanded = false;
+          }
+        });
+
+      // get PRIVATE (user specific) schedule info from backend 
+
+          // check if user is logged in first 
+            if(!this.profile){
+              return;
+            }
+
       
-      // add to scheduleDataInfo array from scheduleDataInfo (property that's value is the object) in the returned data
-      for(let key of Object.keys(data)){
-
-        // add scheduleDataInfo from returned data to our schedule data info
-
-          if(key == "scheduleDataInfo"){
-            for(let i = 0; i< Object.keys(data[key]).length; i++){
-              this.scheduleDataInfo[Object.keys(data[key])[i]] = data["scheduleDataInfo"][Object.keys(data["scheduleDataInfo"])[i]]; 
-              // this.scheduleDataInfo[ SCHEDULE NAME ] = collectionItem["scheduleDataInfo"] VALUE
+          this._configservice.getPrivateScheduleData(this.profile.name).subscribe( (data)  => {
+            console.log(data);
+      
+            /* (data) is in the format:
+            *    data = {
+            *      scheduleDataInfo: { {...}, {...}, {...}, ...}
+            *      scheduleData: { {...}, {...}, {...}, ...}
+            *    }                                                   */
+            
+            // add to scheduleDataInfo array from scheduleDataInfo (property that's value is the object) in the returned data
+            for(let key of Object.keys(data)){
+      
+              // add scheduleDataInfo from returned data to our schedule data info
+                if(key == "scheduleDataInfo"){
+                  for(let i = 0; i< Object.keys(data[key]).length; i++){
+                    this.scheduleDataInfo[Object.keys(data[key])[i]] = data["scheduleDataInfo"][Object.keys(data["scheduleDataInfo"])[i]]; 
+                    // this.scheduleDataInfo[ SCHEDULE NAME ] = collectionItem["scheduleDataInfo"] VALUE
+                  }
+                }
+      
+              // add scheduleData from returned data to our schedule data 
+              
+                else if(key == "scheduleData"){
+                  for(let i = 0; i< Object.keys(data[key]).length; i++){
+                    this.scheduleData[Object.keys(data[key])[i]] = data["scheduleData"][Object.keys(data["scheduleData"])[i]]; 
+                    // this.scheduleData[ SCHEDULE NAME ] = collectionItem["scheduleData"] VALUE
+                  }
+                }
+      
+                else{
+                  console.log("something broked returned data has more than scheduleDataInfo and scheduleData properties");
+                }
             }
-          }
-
-        // add scheduleData from returned data to our schedule data 
-        
-          else if(key == "scheduleData"){
-            for(let i = 0; i< Object.keys(data[key]).length; i++){
-              this.scheduleData[Object.keys(data[key])[i]] = data["scheduleData"][Object.keys(data["scheduleData"])[i]]; 
-              // this.scheduleData[ SCHEDULE NAME ] = collectionItem["scheduleData"] VALUE
+            // setting all courses expanded to false
+            for(let courseList of Object.keys(this.scheduleDataInfo)){
+              this.scheduleDataInfo[courseList].expanded = false;
             }
-          }
-
-          else{
-            console.log("something broked returned data has more than scheduleDataInfo and scheduleData properties");
-          }
-      }
-      // setting all courses expanded to false
-      for(let courseList of Object.keys(this.scheduleDataInfo)){
-        this.scheduleDataInfo[courseList].expanded = false;
-      }
+          });
       // console.log(this.scheduleDataInfo);
       // console.log(this.scheduleData);
-    });
   };
 }

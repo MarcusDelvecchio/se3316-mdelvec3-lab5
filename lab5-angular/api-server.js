@@ -185,6 +185,46 @@ app.post("/api/user/update-data"/*, checkJwt*/, (req, res)=> {
       });
   });
 
+  // get PRIVATE course list data (with username reoute param)
+  app.get("/api/:username/scheduleData", (req, res) => {
+
+    let username = req.params.username;
+
+    return mongoClient.connect()
+      .then( () => {
+        const scheduleCollection = mongoClient.db("db-name").collection(username).find();
+
+        return new Promise((resolve, reject) => {
+          scheduleData = {};
+
+          scheduleCollection.forEach( e => {
+            scheduleData["scheduleDataInfo"] = e.scheduleDataInfo;
+            scheduleData["scheduleData"] = e.scheduleData;
+          }, 
+          () => {   // callback executed after forEach
+            scheduleCollection.close();
+            
+            if(scheduleData){
+              console.log(scheduleData);
+              resolve(scheduleData);  
+            }
+            else{
+              reject("could not get data");
+            }
+          });
+        })
+        }).then( (scheduleData) => {
+          return res.status(201).send(scheduleData);
+        }).catch((error) => {
+          console.log(error);
+          return res.status(400).send();
+        })
+      .catch(error => {
+        console.log("could not connect to db");
+      });
+  });
+
+
 /*
 app.get("/api/user/signIn", checkJwt, (req, res)=> {
 
