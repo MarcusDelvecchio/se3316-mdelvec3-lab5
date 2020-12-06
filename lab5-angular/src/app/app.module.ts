@@ -19,7 +19,12 @@ import { LoginButtonComponent } from './components/login-button/login-button.com
 import { LogoutButtonComponent } from './components/logout-button/logout-button.component';
 
 import { ConfigService } from './components/home-content/home-content.component';
-import { FormsModule } from '@angular/forms'; 
+import { FormsModule } from '@angular/forms';
+import { AdminComponent } from './pages/admin/admin/admin.component'; 
+import { DataService } from "./components/sharedDataInterface";
+import { ManagerComponent } from './pages/managers\/manager/manager.component';
+import { AdminPageContentComponent } from './components/admin-content/admin-page-content/admin-page-content.component';
+import { ManagerPageContentComponent } from './components/manager-content/manager-page-content/manager-page-content.component';
 
 @NgModule({
   declarations: [
@@ -33,6 +38,10 @@ import { FormsModule } from '@angular/forms';
     ProfileComponent,
     LoginButtonComponent,
     LogoutButtonComponent,
+    AdminComponent,
+    ManagerComponent,
+    AdminPageContentComponent,
+    ManagerPageContentComponent,
   ],
   imports: [
     BrowserModule,
@@ -60,6 +69,8 @@ import { FormsModule } from '@angular/forms';
       multi: true,
     },
     ConfigService,
+    DataService
+    
   ],
   bootstrap: [AppComponent],
 })

@@ -18,13 +18,24 @@
       Profile
     </a>
   </div>
-  <div class="nav-item">
+  <div *ngIf="email == admin" class="nav-item">
     <a
-      routerLink="/external-api"
-      class="nav-link"
-      routerLinkActive="router-link-exact-active"
+    routerLink="/admin"
+    class="nav-link"
+    routerLinkActive="router-link-exact-active"
+    [routerLinkActiveOptions]="{ exact: true }"
     >
-      External API
-    </a>
+    Admin
+  </a>
+  </div>
+  <div *ngIf="userIsManager()" class="nav-item">
+    <a
+    routerLink="/manager"
+    class="nav-link"
+    routerLinkActive="router-link-exact-active"
+    [routerLinkActiveOptions]="{ exact: true }"
+    >
+    Management
+  </a>
   </div>
 </div>

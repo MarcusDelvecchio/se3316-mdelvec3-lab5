@@ -3,8 +3,8 @@ import { Routes, RouterModule } from '@angular/router';
 import { AuthGuard } from '@auth0/auth0-angular';
 import { HomeComponent } from 'src/app/pages/home/home.component';
 import { ProfileComponent } from 'src/app/pages/profile/profile.component';
-//import { ExternalApiComponent } from 'src/app/pages/external-api/external-api.component';
-
+import { AdminComponent } from 'src/app/pages/admin\/admin/admin.component';
+import { ManagerComponent } from 'src/app/pages/managers\/manager/manager.component';
 const routes: Routes = [
   {
     path: '',
@@ -16,11 +16,14 @@ const routes: Routes = [
     component: ProfileComponent//,
     //canActivate: [AuthGuard],
   },
-  /*{
-    path: 'external-api',
-    component: ExternalApiComponent//,
-    //canActivate: [AuthGuard],
-  },*/
+  {
+    path: 'admin',
+    component: AdminComponent,
+  },
+  {
+    path: 'manager',
+    component: ManagerComponent,
+  }
 ];
 
 @NgModule({

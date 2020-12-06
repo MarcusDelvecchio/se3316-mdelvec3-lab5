@@ -846,6 +846,8 @@ export class HomeContentComponent {
           }
         });
 
+      // get administrator
+
       // get PRIVATE (user specific) schedule info from backend 
 
           // check if user is logged in first 
