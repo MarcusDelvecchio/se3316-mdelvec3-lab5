@@ -54,6 +54,7 @@ if (!issuer || !audience) {
 
 app.use(morgan("dev"));
 app.use(helmet());
+
 app.use(cors({ origin: appOrigin }));
 
 
@@ -193,7 +194,7 @@ algorithms: ['RS256']
 
 // get PRIVATE course list data (with username reoute param)
 
-  app.get("/api/:username/scheduleData", checkJwt, (req, res) => {
+  app.get("/api/:username/scheduleData"/*, checkJwt*/, (req, res) => {
 
     let username = req.params.username;
 

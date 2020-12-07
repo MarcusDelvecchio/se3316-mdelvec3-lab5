@@ -322,6 +322,21 @@ export class HomeContentComponent {
     }
   }
 
+  showCourseInList(course){
+    
+    let hiddenCourseLists = 0;
+    if(!this.profile){
+      return false;
+    }
+    else if(course.value.creator == this.profile.name){
+      return true;
+    }
+    else{
+      hiddenCourseLists++;
+    }
+    console.log("Private courses hidden: " + hiddenCourseLists);
+  }
+
   addCoursesToSchedule(){
     
     if(this.activeScheduleName == null || this.activeScheduleName == "" || this.activeScheduleName == undefined){
@@ -605,6 +620,17 @@ export class HomeContentComponent {
 
     var newScheduleDataInfoObject = {};
 
+    if(!newName || newName == ""){
+      alert("Please ensure the course list has a name");
+      return;
+    }else if(!this.sanitize(newName, false)){
+      alert("The course list name contain special characters");
+      return;
+    }else if(!this.sanitize(newDesc, false)){
+      alert("The course list description contain special characters");
+      return;
+    }
+
     // if nothing has chnaged
 
       if(newName == this.activeScheduleName && newDesc == this.scheduleDataInfo[this.activeScheduleName].description && newVisibility == this.scheduleDataInfo[this.activeScheduleName].visibility){
@@ -754,6 +780,53 @@ export class HomeContentComponent {
       console.log("db updated");
   }
 
+  getPrivateScheduleData(){
+        // check if user is logged in first 
+        if(!this.profile){
+          return;
+        }
+
+  
+      this._configservice.getPrivateScheduleData(this.profile.name).subscribe( (data)  => {
+        console.log(data);
+  
+        /* (data) is in the format:
+        *    data = {
+        *      scheduleDataInfo: { {...}, {...}, {...}, ...}
+        *      scheduleData: { {...}, {...}, {...}, ...}
+        *    }                                                   */
+        
+        // add to scheduleDataInfo array from scheduleDataInfo (property that's value is the object) in the returned data
+        for(let key of Object.keys(data)){
+  
+          // add scheduleDataInfo from returned data to our schedule data info
+            if(key == "scheduleDataInfo"){
+              for(let i = 0; i< Object.keys(data[key]).length; i++){
+                this.scheduleDataInfo[Object.keys(data[key])[i]] = data["scheduleDataInfo"][Object.keys(data["scheduleDataInfo"])[i]]; 
+                // this.scheduleDataInfo[ SCHEDULE NAME ] = collectionItem["scheduleDataInfo"] VALUE
+              }
+            }
+  
+          // add scheduleData from returned data to our schedule data 
+          
+            else if(key == "scheduleData"){
+              for(let i = 0; i< Object.keys(data[key]).length; i++){
+                this.scheduleData[Object.keys(data[key])[i]] = data["scheduleData"][Object.keys(data["scheduleData"])[i]]; 
+                // this.scheduleData[ SCHEDULE NAME ] = collectionItem["scheduleData"] VALUE
+              }
+            }
+  
+            else{
+              console.log("something broked returned data has more than scheduleDataInfo and scheduleData properties");
+            }
+        }
+        // setting all courses expanded to false
+        for(let courseList of Object.keys(this.scheduleDataInfo)){
+          this.scheduleDataInfo[courseList].expanded = false;
+        }
+      });
+  }
+
   createCourseReviewtoggle(){
     
     if(this.showCourseReviewSection){
@@ -786,7 +859,13 @@ export class HomeContentComponent {
 
     let review = (document.getElementById("courseReview") as HTMLInputElement).value;
 
-    // todo clean up review text
+    if(!review || review == ""){
+      alert("Please enter a review to be submitted");
+      return;
+    }else if(!this.sanitize(review, false)){
+      alert("The review cannot contain special characters");
+      return;
+    }
 
     // todo sanitize review
 
@@ -903,6 +982,7 @@ export class HomeContentComponent {
 
           // check if user is logged in first 
             if(!this.profile){
+              console.log("user not signed in; cannot get private data");
               return;
             }
 

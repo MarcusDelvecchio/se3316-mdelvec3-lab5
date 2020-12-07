@@ -2,13 +2,20 @@
 
 <div class = "padEntireBody">
 
+    
+    <div class = "westernInformation">
+      <h2>About this site</h2>
+      This site provide varius functionalitites for managing your Western Courses. Various functionalities are available in this home page such as searching through the available courses by various properties, viewing course details and leaving reviews on courses, creating custom course lists with names and then adding courses to them and viewing the various course lists, including ones set to public by others. Furthermore, selected coure lists can be rendered into a time table to display the weekly schedule for the list, and can be modified by the creator. Click on course list names in the table to render them or on the row to expand the list to shows its details and the courses in the list. Courses can also be expanded to show additional details by clicking rows in the table. Coursereviews can be found and created to be publicly displayed in the courses information.
+    </div>
+    <br>
+    <!--
      <div class = "westernInformation">     
      <p> As Western University continues to respond to the changing circumstances surrounding the COVID-19 pandemic, the Fall/Winter 2020-2021 course offerings may be subject to change. As you plan your course selections, we encourage you to review the Academic Timetable regularly and follow updates on <a class= "link" href = "https://www.uwo.ca/coronavirus/students.html">  Western's COVID-19 website. </a> </p>
 
      <p>Please Note: Due to uncertainty around COVID-19, students must have a reliable internet connection and computer that are compatible with online learning and testing system requirements. Some courses may also require the use of a remote proctoring platform (such as Proctortrack) to ensure tests are taken fairly in accordance with Western's policy on Scholastic Discipline for Undergraduate Students and Scholastic Discipline for Graduate Students.</p>
      
      <p>Please refer to the course syllabus and <a class= "link"href ="https://remoteproctoring.uwo.ca/"> Western's remote proctoring website for further information. </a> </p>
-     </div>
+     </div>-->
 
     
     <table>
@@ -272,8 +279,7 @@
                 <form>
                   Write a Review
                   <div>
-                    <textarea id="courseReview">
-                    </textarea>
+                    <textarea id="courseReview"></textarea>
                   </div>
                     <button (click)="submitCourseReview(course)">submit</button>
                 </form>
@@ -310,7 +316,7 @@
       <table class="courseListTable">
         <tr>
           <td class="courseListMiddleRowWidth100percent"> 
-            <table><tr><td><h2>Public Course Lists</h2></td><td>   (Click Course Names to Render Timetable)</td></tr></table>
+            <table><tr><td><h2>Public Course Lists</h2></td><td>   (Click Course Names to Render Timetable)</td><td><button (click)="getPrivateScheduleData()">Get private lists</button></td></tr></table>
             <table class="courseListTable">
               <tr class="courseListTableHeaderRow">
                 <td>Name</td>
@@ -321,27 +327,29 @@
 
               <!-- Render two rows for each course list (one hidden until expanded) -->
               <ng-container *ngFor="let courseList of scheduleDataInfo| keyvalue: orderByDate">
-                <tr>
-                  <td class="courseListTableTd"><span class="courseListTitle" (click)="courseListSelected(courseList.key)">{{ courseList.key }}</span></td> 
-                  <td (click)="showMoreCourseListInfo(courseList.key)" class="courseListTableTd" >{{ scheduleDataInfo[courseList.key].creator }} </td> 
-                  <td (click)="showMoreCourseListInfo(courseList.key)" class="courseListTableTd" >{{ getDisplayDate(scheduleDataInfo[courseList.key].modified) }}
-                  <td (click)="showMoreCourseListInfo(courseList.key)" class="courseListTableTd" >{{ scheduleDataInfo[courseList.key].length }} </td> 
-                </tr>
-
-                
-                  <tr class="infoTableTr" *ngIf="scheduleDataInfo[courseList.key].expanded">
-                    
-                    <td colspan="5">
-                      About {{ courseList.key }} <br>
-                      Description: {{ scheduleDataInfo[courseList.key].description }} <br>
-                      Courses:
-                      <ul>
-                        <li *ngFor="let course of scheduleData[courseList.key] | keyvalue"> <!-- i think this is breaking bc the hard coded courses in scheduleDataInfo dont match those in scheduleData but it will work later-->
-                          {{ course.value["subject"] }} {{ course.value["catalog_nbr"] }} <button (click)="removeCourseFromList(courseList.key, course.value['catalog_nbr'])">remove</button>
-                        </li>
-                      </ul>
-                    </td>
+                <ng-container *ngIf="courseList.value.visibility == 'Public' || showCourseInList(courseList)">
+                  <tr>
+                    <td class="courseListTableTd"><span class="courseListTitle" (click)="courseListSelected(courseList.key)">{{ courseList.key }}</span></td> 
+                    <td (click)="showMoreCourseListInfo(courseList.key)" class="courseListTableTd" >{{ scheduleDataInfo[courseList.key].creator }} </td> 
+                    <td (click)="showMoreCourseListInfo(courseList.key)" class="courseListTableTd" >{{ getDisplayDate(scheduleDataInfo[courseList.key].modified) }}
+                    <td (click)="showMoreCourseListInfo(courseList.key)" class="courseListTableTd" >{{ scheduleDataInfo[courseList.key].length }} </td> 
                   </tr>
+
+                  
+                    <tr class="infoTableTr" *ngIf="scheduleDataInfo[courseList.key].expanded">
+                      
+                      <td colspan="5">
+                        About {{ courseList.key }} <br>
+                        Description: {{ scheduleDataInfo[courseList.key].description }} <br>
+                        Courses:
+                        <ul>
+                          <li *ngFor="let course of scheduleData[courseList.key] | keyvalue"> <!-- i think this is breaking bc the hard coded courses in scheduleDataInfo dont match those in scheduleData but it will work later-->
+                            {{ course.value["subject"] }} {{ course.value["catalog_nbr"] }} <button (click)="removeCourseFromList(courseList.key, course.value['catalog_nbr'])">remove</button>
+                          </li>
+                        </ul>
+                      </td>
+                    </tr>
+                  </ng-container>
               </ng-container>
 
             </table>
