@@ -1,73 +1,12 @@
 import { Component, OnInit, ɵConsole } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
 import { faLink, faThumbsDown } from '@fortawesome/free-solid-svg-icons';
 import { AuthService } from '@auth0/auth0-angular';
 import { ConstantPool } from '@angular/compiler';
 //import { Headers } from '@angular/common/http'
 import { DataService } from '../sharedDataInterface';
 import { returnedReviewData } from './reviewDataInterface';
-
-
-// observables from interfaces so we can get from http requests
-import { courseObject } from './courseInterface';
-import { scheduleInfo } from './scheduleInterface';
-import { scheduleResponse } from './scheduleResponseInterface';
 import { THIS_EXPR } from '@angular/compiler/src/output/output_ast';
-
-@Injectable()
-export class ConfigService {
-
-  public port = 7000;
-  private GETCourseDataString: string = "http://localhost:" + this.port + "/api/courseData";
-  private POSTpublicScheduleDataString: string = "http://localhost:" + this.port + "/api/public/update-data";
-  private POSTprivateScheduleDataString: string = "http://localhost:" + this.port + "/api/user/update-data";
-  private GETPublicScheduleDataString: string = "http://localhost:" + this.port + "/api/public/scheduleData";
-  private GETreviewDataString: string = "http://localhost:" + this.port + "/api/get/reviews";
-  private POSTreviewDataString: string = "http://localhost:" + this.port + "/api/reviews";
-
-  constructor(private http: HttpClient) {}
-
-    postPublicScheduleData(content): Observable<scheduleInfo[]> {
-      return this.http.post<scheduleInfo[]>(this.POSTpublicScheduleDataString, content);
-      /* body is in the format body = { scheduleName1: { course1: { COURSE INFO }, course2: { COURSE 2 INFO }, ... }, schedule2: { ... }, ...}*/
-    };
-
-    postPrivateScheduleData(content): Observable<scheduleInfo[]> {
-      return this.http.post<scheduleInfo[]>(this.POSTprivateScheduleDataString, content);
-      /* body is in the format body = { scheduleName1: { course1: { COURSE INFO }, course2: { COURSE 2 INFO }, ... }, schedule2: { ... }, ...}*/
-    };
-    
-    getCourseData(): Observable<courseObject[]> {
-      return this.http.get<courseObject[]>(this.GETCourseDataString);
-    };
-
-    getPublicScheduleData(): Observable<scheduleResponse[]> {  // observable type any?
-      return this.http.get<any[]>(this.GETPublicScheduleDataString);
-    };
-
-    getPrivateScheduleData(username): Observable<scheduleResponse[]> {  // observable type any?
-      let GETPrivateScheduleDataString: string = "http://localhost:" + this.port + "/api/" + username + "/scheduleData";
-      return this.http.get<any[]>(GETPrivateScheduleDataString);
-    };
-
-    getReviewData(): Observable<returnedReviewData[]>{
-      return this.http.get<returnedReviewData[]>(this.GETreviewDataString);
-    }
-
-    postReviewData(data): Observable<returnedReviewData[]>{
-      return this.http.post<any[]>(this.POSTreviewDataString, data);
-    }
-
-    renderTableData(){};
-    searchSubmitted(){};
-    renderTimeTable(){};
-    addCoursesToSchedule(){};
-    scheduleSelected(scheduleName: string){};
-    createSchedule(){};
-    scheduleNameInput;
-}
+import { ConfigService } from '../dataservice'
 
 @Component({
   selector: 'app-home-content',
@@ -104,6 +43,7 @@ export class HomeContentComponent {
   showCourseReviewSection;
   showCourseReviewListSection;
   reviewData;               // object containing course review data, rewritten to db evey time a new review is created format: reviewData = [ { courseNum: number, review: string, creator: string, hidden: boolean }, { ... } , { ... } ]
+  reviewId;   // number set equal to number of reviews in db so that unique id can be given to every course review
 
   constructor(private _configservice:ConfigService, public auth: AuthService, public dataService: DataService){
     this.showInfoTable = false;
@@ -329,13 +269,13 @@ export class HomeContentComponent {
       return;
     }
     else{
-      console.log("schedule " + name + " created");
+      console.log("schedule " + name + " created by user" + this.profile.name);
       this.scheduleData[name] = {};
       console.log(this.scheduleData);
 
       // todo get modified date and creator from user
       // todo saitize description?
-      this.scheduleDataInfo[name] = { creator: this.profile.user, modified: currentTime, length: 0, description: description, expanded: false, visibility: visiblity };
+      this.scheduleDataInfo[name] = { creator: this.profile.name, modified: currentTime, length: 0, description: description, expanded: false, visibility: visiblity};
     }
     this.scheduleNameInput = "";
     this.newScheduleEnabled =  false; // hide the create schedule options again
@@ -853,12 +793,13 @@ export class HomeContentComponent {
     // get the course id
     let classNum = course["course_info"][0]["class_nbr"];
 
-    let reviewObject = { courseNum: classNum, reviewContent: review, creator: this.profile.name, hidden: false };
+    let reviewObject = { courseNum: classNum, reviewContent: review, creator: this.profile.name, hidden: false, Id: this.reviewId};
+    console.log(this.reviewData);
     this.reviewData.push(reviewObject);
 
     this.showCourseReviewListSection = false;
     this.postReviewData();
-    this.getReviewData();
+    //this.getReviewData();
     console.log(this.reviewData);
     alert("review submitted") 
   }
@@ -870,16 +811,20 @@ export class HomeContentComponent {
 
   postReviewData(){
     this._configservice.postReviewData(this.reviewData).subscribe(data => {
+     
      this.reviewData = data;
+     this.reviewData= this.reviewData.reviewData;
      console.log("(response) updated data:");
-     console.log(data);
+     this.reviewId = this.reviewData.length -1;
     });
 
   }
 
   getReviewData(){
     this._configservice.getReviewData().subscribe(data => {
+      console.log(data);
       this.reviewData = data[data.length -1]["reviewData"];
+      this.reviewId = data.length -1;
       console.log("(getReviewData() response) recieved review data:");
       console.log(this.reviewData);
     });
@@ -887,6 +832,7 @@ export class HomeContentComponent {
 
   ngOnInit(){
 
+    // get user data
     this.auth.user$.subscribe(
       (profile) => { 
         let profileJson = JSON.stringify(profile, null, 2);
@@ -1003,3 +949,15 @@ export class HomeContentComponent {
       // console.log(this.scheduleData);
   };
 }
+
+/* rule to add to auth0 to force email verification (removed bc using random email accounts)
+
+function (user, context, callback) {
+  if (!user.email_verified) {
+    return callback(new UnauthorizedError('Please verify your email before logging in.'));
+  } else {
+    return callback(null, user, context);
+  }
+}
+
+*/

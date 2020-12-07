@@ -18,13 +18,15 @@ import { environment as env } from '../environments/environment';
 import { LoginButtonComponent } from './components/login-button/login-button.component';
 import { LogoutButtonComponent } from './components/logout-button/logout-button.component';
 
-import { ConfigService } from './components/home-content/home-content.component';
+import { ConfigService } from './components/dataservice';
 import { FormsModule } from '@angular/forms';
 import { AdminComponent } from './pages/admin/admin/admin.component'; 
 import { DataService } from "./components/sharedDataInterface";
 import { ManagerComponent } from './pages/managers\/manager/manager.component';
 import { AdminPageContentComponent } from './components/admin-content/admin-page-content/admin-page-content.component';
 import { ManagerPageContentComponent } from './components/manager-content/manager-page-content/manager-page-content.component';
+import { PoliciesComponent } from './pages/policies/policies.component';
+import { PoliciesContentComponent } from './components/policies-content/policies-content.component';
 
 @NgModule({
   declarations: [
@@ -42,6 +44,8 @@ import { ManagerPageContentComponent } from './components/manager-content/manage
     ManagerComponent,
     AdminPageContentComponent,
     ManagerPageContentComponent,
+    PoliciesComponent,
+    PoliciesContentComponent,
   ],
   imports: [
     BrowserModule,
@@ -75,7 +79,8 @@ import { ManagerPageContentComponent } from './components/manager-content/manage
       multi: true,
     },
     ConfigService,
-    DataService
+    DataService,
+    ConfigService
     
   ],
   bootstrap: [AppComponent],

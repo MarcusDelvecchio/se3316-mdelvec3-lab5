@@ -5,6 +5,8 @@ import { HomeComponent } from 'src/app/pages/home/home.component';
 import { ProfileComponent } from 'src/app/pages/profile/profile.component';
 import { AdminComponent } from 'src/app/pages/admin\/admin/admin.component';
 import { ManagerComponent } from 'src/app/pages/managers\/manager/manager.component';
+import { PoliciesComponent } from 'src/app/pages/policies/policies.component';
+
 const routes: Routes = [
   {
     path: '',
@@ -23,6 +25,10 @@ const routes: Routes = [
   {
     path: 'manager',
     component: ManagerComponent,
+  },
+  {
+    path: 'policies',
+    component: PoliciesComponent,
   }
 ];
 

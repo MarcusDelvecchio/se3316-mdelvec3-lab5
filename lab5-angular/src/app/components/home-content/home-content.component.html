@@ -287,7 +287,7 @@
               <div>
                 <table class="reviewstable">
                   <tr *ngFor="let review of reviewData">
-                    <ng-container *ngIf="review.courseNum == course.course_info[0].class_nbr">
+                    <ng-container *ngIf="review.courseNum == course.course_info[0].class_nbr && review.hidden == false">
                       <td colspan="7">
                         <span>{{ review.creator }}:</span>
                         <span>{{ review["reviewContent"] }}</span>

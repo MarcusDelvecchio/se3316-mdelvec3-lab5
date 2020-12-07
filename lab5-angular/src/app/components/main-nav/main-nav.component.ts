@@ -12,7 +12,7 @@ export class MainNavComponent implements OnInit {
 
   email;
   managers;
-  admin;
+  admin = "mdelvec3@uwo.ca";  // todo backend
 
   ngOnInit(): void {
 
@@ -21,7 +21,11 @@ export class MainNavComponent implements OnInit {
       (profile) => { 
         let profileJson = JSON.stringify(profile, null, 2);
         this.email = JSON.parse(profileJson).email;
+        console.log("user email:" + this.email);
     });
+
+    // get admin
+    this.assignAdmin();
     //this.data.getAdmin.subscribe(message => this.message = message) cuz not an observable but might have to do that
   }
 
@@ -34,7 +38,8 @@ export class MainNavComponent implements OnInit {
   }
 
   assignAdmin(){
-    this.admin = this.data.getAdmin();  
+    //this.admin = this.data.getAdmin();    // todo setup admin and manager backend
+    this.admin = "mdelvec3@uwo.ca";
   }
 
   // check if user is manager

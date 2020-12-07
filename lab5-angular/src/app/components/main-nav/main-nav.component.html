@@ -18,7 +18,17 @@
       Profile
     </a>
   </div>
-  <div *ngIf="email == admin" class="nav-item">
+  <div class="nav-item">
+    <a
+      routerLink="/policies"
+      class="nav-link"
+      routerLinkActive="router-link-exact-active"
+      [routerLinkActiveOptions]="{ exact: true }"
+    >
+      Policies
+    </a>
+  </div>
+  <div *ngIf="email == admin" class="nav-item" >
     <a
     routerLink="/admin"
     class="nav-link"

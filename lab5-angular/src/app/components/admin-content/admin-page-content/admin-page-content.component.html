@@ -4,3 +4,19 @@
 
 <br>
 <button (click)="getUsers()">get users</button>
+
+
+<h2> Manage Reviews </h2>
+
+<div>
+    <table class="reviewstable">
+      <tr *ngFor="let review of reviewData">
+          <td colspan="7">
+            <span>{{ review.creator }}:</span>
+            <span>{{ review["reviewContent"] }}</span>
+            <ng-container *ngIf="!review.hidden"><button (click)="toggleReviewHide(review)">Hide Review</button></ng-container>
+            <ng-container *ngIf="review.hidden"><button (click)="toggleReviewHide(review)">Unhide Review Review</button></ng-container>
+          </td>
+      </tr>
+    </table>
+  </div>
