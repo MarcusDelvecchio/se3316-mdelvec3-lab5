@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { DataService } from '../../sharedDataInterface';
 
 @Component({
   selector: 'app-admin-page-content',
@@ -8,9 +9,19 @@ import { Component, OnInit } from '@angular/core';
 })
 export class AdminPageContentComponent implements OnInit {
 
-  constructor() { }
+  constructor(public dataService: DataService) { }
 
   ngOnInit(): void {
+  }
+
+  getManagers(){
+    let x = this.dataService.getManagers();
+    console.log(x);
+  }
+
+  getUsers(){
+    let x = this.dataService.getUsers();
+    console.log(x);
   }
 
 }

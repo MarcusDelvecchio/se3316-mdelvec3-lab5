@@ -22,18 +22,31 @@ export class MainNavComponent implements OnInit {
         let profileJson = JSON.stringify(profile, null, 2);
         this.email = JSON.parse(profileJson).email;
     });
-
-    // getting admin from sharedDataInterface
     //this.data.getAdmin.subscribe(message => this.message = message) cuz not an observable but might have to do that
-    this.admin = this.data.getAdmin()
+  }
 
-    // getting managers from sharedDataInterface
+  // MOVED OUTSIDE BC USER HAS TO BE LOGGED IN
+
+  // getting managers from sharedDataInterface
+  getManagers(){
     this.managers = this.data.getManagers();
     console.log(this.managers);
   }
 
+  assignAdmin(){
+    this.admin = this.data.getAdmin();  
+  }
+
   // check if user is manager
   userIsManager(){
+    if(!this.email){
+      return false;
+    }
+    if(!this.managers){
+      this.getManagers();
+      console.log("getting managers");
+    }
+
     if(this.managers.includes(this.email)){
       return true;
     }

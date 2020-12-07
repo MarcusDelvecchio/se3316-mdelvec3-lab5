@@ -243,27 +243,64 @@
 
      <ng-container *ngFor="let course of data; let i=index">
      
-       <tr class="infoTableTr"> 
-       <td class="infoTableTd" (click)="showMoreCourseInfo(course)">{{course["subject"]}}</td>
-       <td class="infoTableTd" (click)="showMoreCourseInfo(course)">{{course["catalog_nbr"]}}</td>
-       <td class="infoTableTd" (click)="showMoreCourseInfo(course)">{{course["className"]}}</td>
-       <td class="infoTableTd-smaller" (click)="showMoreCourseInfo(course)">{{course["course_info"][0]["class_section"]}}</td>
-       <td class="infoTableTd-smaller" (click)="showMoreCourseInfo(course)">{{course["course_info"][0]["ssr_component"]}}</td>
-       <td class="infoTableTd" (click)="showMoreCourseInfo(course)">{{course["course_info"][0]["days"]}}<br>{{course["course_info"][0]["start_time"]}} - {{course["course_info"][0]["end_time"]}}</td>
+        <tr class="infoTableTr"> 
+          <td class="infoTableTd" (click)="showMoreCourseInfo(course)">{{course["subject"]}}</td>
+          <td class="infoTableTd" (click)="showMoreCourseInfo(course)">{{course["catalog_nbr"]}}</td>
+          <td class="infoTableTd" (click)="showMoreCourseInfo(course)">{{course["className"]}}</td>
+          <td class="infoTableTd-smaller" (click)="showMoreCourseInfo(course)">{{course["course_info"][0]["class_section"]}}</td>
+          <td class="infoTableTd-smaller" (click)="showMoreCourseInfo(course)">{{course["course_info"][0]["ssr_component"]}}</td>
+          <td class="infoTableTd" (click)="showMoreCourseInfo(course)">{{course["course_info"][0]["days"]}}<br>{{course["course_info"][0]["start_time"]}} - {{course["course_info"][0]["end_time"]}}</td>
 
-       <td class="infoTableTd">
-         <input type="checkbox" [(ngModel)]='course.checked' (change)="courseSelected(course)"><br>Add to Schedule
-       </td>
-     </tr>
+          <td class="infoTableTd">
+            <input type="checkbox" [(ngModel)]='course.checked' (change)="courseSelected(course)"><br>Add to Schedule
+          </td>
+        </tr>
 
-     <tr class="infoTableTr" *ngIf="course['showMoreInfo']">
-       <!-- show more info if table item clicked-->
-       <td colspan="7">
-         More Info About {{course["subject"]}} {{course["catalog_nbr"]}}: {{course["className"]}}<br>ClassNumber: {{course["course_info"][0]["class_nbr"]}}<br>Campus and Facility ID: {{course["course_info"][0]["campus"]}}, {{course["course_info"][0]["facility_ID"]}} <br>Enrollment Status: {{course["course_info"][0]["enrl_stat"]}} <br> More Details: {{course["course_info"][0]["descr"]}}<br>Description: {{course["catalog_description"]}}
-       </td>
-     </tr>
+        <ng-container *ngIf="course['showMoreInfo']">
+          <tr class="infoTableTr">
+            <!-- show more info if table item clicked-->
+            <td colspan="7">
+              More Info About {{course["subject"]}} {{course["catalog_nbr"]}}: {{course["className"]}}<br>ClassNumber: {{course["course_info"][0]["class_nbr"]}}<br>Campus and Facility ID: {{course["course_info"][0]["campus"]}}, {{course["course_info"][0]["facility_ID"]}} <br>Enrollment Status: {{course["course_info"][0]["enrl_stat"]}} <br> More Details: {{course["course_info"][0]["descr"]}}<br>Description: {{course["catalog_description"]}}
+            <hr>
+            <button (click)="createCourseReviewtoggle()">Write a Review</button>
+            <button (click)="toggleShowReviews()">Show Reviews</button>
+            </td>
+          </tr>
+          <tr *ngIf="showCourseReviewSection" class="infoTableTr">
+            <td colspan="7">
+              <div>
+                <form>
+                  Write a Review
+                  <div>
+                    <textarea id="courseReview">
+                    </textarea>
+                  </div>
+                    <button (click)="submitCourseReview(course)">submit</button>
+                </form>
+              </div>
+            </td>
+          </tr>
 
-     </ng-container>
+          <!-- reviews list section -->
+          <tr *ngIf="showCourseReviewListSection" class="infoTableTr">
+            <td colspan="7">
+              <div>
+                <table class="reviewstable">
+                  <tr *ngFor="let review of reviewData">
+                    <ng-container *ngIf="review.courseNum == course.course_info[0].class_nbr">
+                      <td colspan="7">
+                        <span>{{ review.creator }}:</span>
+                        <span>{{ review["reviewContent"] }}</span>
+                      </td>
+                    </ng-container>
+                  </tr>
+                </table>
+              </div>
+            </td>
+          </tr>
+        </ng-container>
+
+      </ng-container>
    </table>
  </div> 
 

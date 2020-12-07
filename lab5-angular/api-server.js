@@ -111,8 +111,8 @@ algorithms: ['RS256']
           return res.status(201).send(privateScheduleData); // token here maybe?
       })
       .catch(err => {
-          console.log("Error storing user\n",err);
-          return res.status(500).send("Failed to store user info.");
+          console.log("could not connect to private schedule info database\n",err);
+          return res.status(401).send("Failed to store user info.");
       });
   });
 
@@ -141,7 +141,7 @@ algorithms: ['RS256']
             return res.status(201).send(publicScheduleData); // token here maybe?
         })
         .catch(err => {
-            console.log("Error storing user\n",err);
+            console.log("could not connect to public schedule info database\n",err);
             return res.status(500).send("Failed to store user info.");
         });
   });
@@ -230,6 +230,235 @@ algorithms: ['RS256']
         console.log("could not connect to db");
       });
   });
+
+// add admin 
+
+  app.post("/api/admin/add", checkJwt, (req, res)=> {
+
+    // get user from body
+    let username = req.body.user; //set user once you pass in scheduleDataInfo
+
+      return mongoClient.connect()
+      .then(() => { 
+          mongoClient.db("db-name").collection("public-admin").insertOne(username);
+          return res.status(201).send(publicScheduleData); // token here maybe?
+      })
+      .catch(err => {
+          console.log("Error storing admin\n",err);
+          return res.status(500).send("Failed to store admin info.");
+      });
+  });
+
+// add manager
+
+  app.post("/api/manager/add", checkJwt, (req, res)=> {
+
+    // get user from body
+    let username = req.body.user; //set user once you pass in scheduleDataInfo
+
+      return mongoClient.connect()
+      .then(() => { 
+          mongoClient.db("db-name").collection("managers").insertOne(username);
+          return res.status(201).send(publicScheduleData); // token here maybe?
+      })
+      .catch(err => {
+          console.log("Error storing admin\n",err);
+          return res.status(500).send("Failed to store admin info.");
+      });
+  });
+
+  // get admin
+  // changhe to compare if admin so we don't send admin data back to client?
+
+  app.get("/api/admin/get", checkJwt, (req, res) => {
+
+    return mongoClient.connect()
+      .then( () => {
+        const scheduleCollection = mongoClient.db("db-name").collection("admin").find();
+
+        return new Promise((resolve, reject) => {
+          admin;
+
+          scheduleCollection.forEach( e => {
+            admin = e;
+          }, 
+          () => {   // callback executed after forEach
+            scheduleCollection.close();
+            
+            if(admin){
+              console.log(admin);
+              resolve(admin);  
+            }
+            else{
+              reject("could get admin info");
+            }
+          });
+        })
+        }).then( (admin) => {
+          return res.status(201).send(admin);
+        }).catch((error) => {
+          console.log(error);
+          return res.status(400).send();
+        })
+      .catch(error => {
+        console.log("could not connect to db");
+      });
+  });
+
+  // get managers
+
+  app.get("/api/manager/get", checkJwt, (req, res) => {
+
+    return mongoClient.connect()
+      .then( () => {
+        const scheduleCollection = mongoClient.db("db-name").collection("managers").find();
+
+        return new Promise((resolve, reject) => {
+          managers = [];
+
+          scheduleCollection.forEach( e => {
+            managers.push(e);
+          }, 
+          () => {   // callback executed after forEach
+            scheduleCollection.close();
+            
+            if(managers){
+              console.log(managers);
+              resolve(managers);  
+            }
+            else{
+              reject("could get manager info");
+            }
+          });
+        })
+        }).then( (managers) => {
+          return res.status(201).send(managers);
+        }).catch((error) => {
+          console.log(error);
+          return res.status(400).send();
+        })
+      .catch(error => {
+        console.log("could not connect to db");
+      });
+  });
+
+// get users
+  app.get("/api/user/get", checkJwt, (req, res) => {
+
+    return mongoClient.connect()
+      .then( () => {
+        const userCollection = mongoClient.db("db-name").collection("users").find();
+
+        return new Promise((resolve, reject) => {
+          users = [];
+
+          userCollection.forEach( e => {
+            users.push(e);
+          }, 
+          () => {   // callback executed after forEach
+            userCollection.close();
+            
+            if(users){
+              console.log(users);
+              resolve(users);  
+            }
+            else{
+              reject("could get user info");
+            }
+          });
+        })
+        }).then( (users) => {
+          return res.status(201).send(users);
+        }).catch((error) => {
+          console.log(error);
+          return res.status(400).send();
+        })
+      .catch(error => {
+        console.log("could not connect to db");
+      });
+  });
+
+  //get review data
+  app.get("/api/get/reviews", (req, res) => {
+
+    return mongoClient.connect()
+      .then( () => {
+        const userCollection = mongoClient.db("db-name").collection("reviews").find();
+
+        return new Promise((resolve, reject) => {
+          reviews = [];
+
+          userCollection.forEach( e => {
+            reviews.push(e);
+          }, 
+          () => {   // callback executed after forEach
+            userCollection.close();
+            
+            if(reviews){
+              console.log(reviews);
+              resolve(reviews);  
+            }
+            else{
+              reject("could get reviews info");
+            }
+          });
+        })
+        }).then( (reviews) => {
+          return res.status(201).send(reviews);
+        }).catch((error) => {
+          console.log(error);
+          return res.status(400).send();
+        })
+      .catch(error => {
+        console.log("could not connect to db");
+      });
+  });
+
+  // update review data
+  
+  app.post("/api/reviews", checkJwt, (req, res)=> {
+
+    // user specific data to be sent to user specific collection
+      let reviews = { reviewData: req.body }; // has to be an object
+
+      return mongoClient.connect()
+      .then(() => { 
+          mongoClient.db("db-name").collection("reviews").insertOne(reviews);
+          return res.status(201).send(reviews); // token here maybe?
+      })
+      .catch(err => {
+          console.log("could not connect to review info database\n",err);
+          return res.status(500).send("Failed to store review info.");
+      });
+});
+
+
+
+
+  
+
+  /*app.post("/api/reviews", checkJwt, (req, res)=> {
+
+    // user specific data to be sent to user specific collection
+      let reviewData = req.body;
+
+      return mongoClient.connect()
+      .then(() => { 
+          mongoClient.db("db-name").collection("reviews").insertOne(reviewData);
+          return res.status(201).send(reviewData); 
+      })
+      .catch(err => {
+          console.log("could not connect to public review info database\n",err);
+          return res.status(500).send("Failed to store review data.");
+      });
+  });*/
+
+  // add user to db
+
+  //app.post("/api/reviews", checkJwt, (req, res)=> {
+
+
+
 
 app.listen(port, () => console.log(`API Server listening on port ${port}`));
 

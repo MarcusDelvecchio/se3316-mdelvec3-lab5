@@ -18,7 +18,13 @@ export interface courseObject {
       descr: string
       }
     ],
-      catalog_description: string,
-    // review?
+    catalog_description: string,
+    reviews: [
+      {
+      reviewContent: string,
+      creator: string,
+      hidden: boolean
+      }
+    ]
   }
   

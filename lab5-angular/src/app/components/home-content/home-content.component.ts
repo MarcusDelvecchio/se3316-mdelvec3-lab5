@@ -6,19 +6,26 @@ import { faLink, faThumbsDown } from '@fortawesome/free-solid-svg-icons';
 import { AuthService } from '@auth0/auth0-angular';
 import { ConstantPool } from '@angular/compiler';
 //import { Headers } from '@angular/common/http'
+import { DataService } from '../sharedDataInterface';
+import { returnedReviewData } from './reviewDataInterface';
+
 
 // observables from interfaces so we can get from http requests
 import { courseObject } from './courseInterface';
 import { scheduleInfo } from './scheduleInterface';
 import { scheduleResponse } from './scheduleResponseInterface';
+import { THIS_EXPR } from '@angular/compiler/src/output/output_ast';
 
 @Injectable()
 export class ConfigService {
+
   public port = 7000;
   private GETCourseDataString: string = "http://localhost:" + this.port + "/api/courseData";
   private POSTpublicScheduleDataString: string = "http://localhost:" + this.port + "/api/public/update-data";
   private POSTprivateScheduleDataString: string = "http://localhost:" + this.port + "/api/user/update-data";
   private GETPublicScheduleDataString: string = "http://localhost:" + this.port + "/api/public/scheduleData";
+  private GETreviewDataString: string = "http://localhost:" + this.port + "/api/get/reviews";
+  private POSTreviewDataString: string = "http://localhost:" + this.port + "/api/reviews";
 
   constructor(private http: HttpClient) {}
 
@@ -45,6 +52,14 @@ export class ConfigService {
       return this.http.get<any[]>(GETPrivateScheduleDataString);
     };
 
+    getReviewData(): Observable<returnedReviewData[]>{
+      return this.http.get<returnedReviewData[]>(this.GETreviewDataString);
+    }
+
+    postReviewData(data): Observable<returnedReviewData[]>{
+      return this.http.post<any[]>(this.POSTreviewDataString, data);
+    }
+
     renderTableData(){};
     searchSubmitted(){};
     renderTimeTable(){};
@@ -59,6 +74,7 @@ export class ConfigService {
   templateUrl: './home-content.component.html',
   styleUrls: ['../componentStyles.css']
 })
+
 export class HomeContentComponent {
 
   faLink = faLink;
@@ -85,8 +101,11 @@ export class HomeContentComponent {
   showEditButton; // set to true when a course is selected from the list so the edit button appears
   port;
   profile = null; // user profile data (set on ngOnInit) -> promise recieved from user data
+  showCourseReviewSection;
+  showCourseReviewListSection;
+  reviewData;               // object containing course review data, rewritten to db evey time a new review is created format: reviewData = [ { courseNum: number, review: string, creator: string, hidden: boolean }, { ... } , { ... } ]
 
-  constructor(private _configservice:ConfigService, public auth: AuthService){
+  constructor(private _configservice:ConfigService, public auth: AuthService, public dataService: DataService){
     this.showInfoTable = false;
     this.showTimeTable = false;
     this.checked = [];
@@ -291,7 +310,11 @@ export class HomeContentComponent {
 
   createSchedule(){
     let name: string = this.scheduleNameInput;
-    let user = this.profile.name
+
+    // if(!this.profile){                // impliment this?broken rn can't test
+    //   let user = this.profile.name
+    // }
+    
     let description: string = (document.getElementById("scheduleDescription") as HTMLInputElement).value;
     let visiblity: string = (document.getElementById("visibilityDropDown") as HTMLInputElement).value;
     let currentTime = new Date();
@@ -312,7 +335,7 @@ export class HomeContentComponent {
 
       // todo get modified date and creator from user
       // todo saitize description?
-      this.scheduleDataInfo[name] = { creator: user, modified: currentTime, length: 0, description: description, expanded: false, visibility: visiblity };
+      this.scheduleDataInfo[name] = { creator: this.profile.user, modified: currentTime, length: 0, description: description, expanded: false, visibility: visiblity };
     }
     this.scheduleNameInput = "";
     this.newScheduleEnabled =  false; // hide the create schedule options again
@@ -409,7 +432,7 @@ export class HomeContentComponent {
 
   getDisplayDate(date: string): string{
     let newDate = new Date(date);
-    return newDate.getFullYear() + "-" + newDate.getDate() + "-" + newDate.getHours() +":"+ newDate.getMinutes()
+    return newDate.getFullYear() + "-" + (newDate.getMonth() + 1) + "-" + newDate.getDate() + "-" + (newDate.getHours() +1) +":"+ (newDate.getMinutes() +1)
   }
 
 
@@ -577,6 +600,7 @@ export class HomeContentComponent {
 
     if(this.scheduleDataInfo[name].expanded){
       this.scheduleDataInfo[name].expanded = false;
+      this.showCourseReviewSection = false; // also minimize course review section
     }else{
       this.scheduleDataInfo[name].expanded = true;
     }
@@ -612,6 +636,8 @@ export class HomeContentComponent {
   }
 
   toggleEditCourseList(){
+    // console.log(this.scheduleDataInfo[this.activeScheduleName].creator);
+    // console.log(this.profile.name);
 
     // check if user is logged in
       if(!this.profile){
@@ -788,23 +814,102 @@ export class HomeContentComponent {
       console.log("db updated");
   }
 
+  createCourseReviewtoggle(){
+    
+    if(this.showCourseReviewSection){
+      this.showCourseReviewSection = false;
+    }
+    else{
+      if(!this.profile){
+        alert("you must sign in to access this functionality");
+        return;
+      }
+      this.showCourseReviewSection = true;
+    }
+  }
+
+  toggleShowReviews(){
+
+    if(this.showCourseReviewListSection){
+      this.showCourseReviewListSection = false;
+    }
+    else{
+
+      // get the review data from db before showing
+      this.getReviewData();
+
+      this.showCourseReviewListSection = true;
+    }
+  }
+
+  submitCourseReview(course: string){
+
+    let review = (document.getElementById("courseReview") as HTMLInputElement).value;
+
+    // todo clean up review text
+
+    // todo sanitize review
+
+    // get the course id
+    let classNum = course["course_info"][0]["class_nbr"];
+
+    let reviewObject = { courseNum: classNum, reviewContent: review, creator: this.profile.name, hidden: false };
+    this.reviewData.push(reviewObject);
+
+    this.showCourseReviewListSection = false;
+    this.postReviewData();
+    this.getReviewData();
+    console.log(this.reviewData);
+    alert("review submitted") 
+  }
+
+  getManagers(){
+    let x = this.dataService.getManagers();
+    console.log(x);
+  }
+
+  postReviewData(){
+    this._configservice.postReviewData(this.reviewData).subscribe(data => {
+     this.reviewData = data;
+     console.log("(response) updated data:");
+     console.log(data);
+    });
+
+  }
+
+  getReviewData(){
+    this._configservice.getReviewData().subscribe(data => {
+      this.reviewData = data[data.length -1]["reviewData"];
+      console.log("(getReviewData() response) recieved review data:");
+      console.log(this.reviewData);
+    });
+  }
+
   ngOnInit(){
-    console.log("on init called");
 
     this.auth.user$.subscribe(
       (profile) => { 
         let profileJson = JSON.stringify(profile, null, 2);
         this.profile = JSON.parse(profileJson);
-        console.log(this.profile);
         console.log(this.profile)
     });
 
     // getting course data to populate tables with
 
-      this._configservice.getCourseData().subscribe(data => {
-        this.dataArray = data;
-      });
+    this._configservice.getCourseData().subscribe(data => {
+      this.dataArray = data;
+      console.log("course data recieved");
+    });
     
+
+    // getting review data
+    this.getReviewData();
+    /*this._configservice.getReviewData().subscribe(data => {
+      this.reviewData = data;
+      console.log("(getReviewData() response) recieved review data:");
+      console.log(this.reviewData);
+    });*/
+   
     // getting PUBLIC schedule data from backend
 
         this._configservice.getPublicScheduleData().subscribe( (data)  => {
