@@ -11,13 +11,23 @@ import { returnedReviewData } from './home-content/reviewDataInterface';
 @Injectable()
 export class ConfigService {
 
-  public port = 7000;
+  public port = ""; //7000;
+  /*
   private GETCourseDataString: string = "http://localhost:" + this.port + "/api/courseData";
   private POSTpublicScheduleDataString: string = "http://localhost:" + this.port + "/api/public/update-data";
   private POSTprivateScheduleDataString: string = "http://localhost:" + this.port + "/api/user/update-data";
   private GETPublicScheduleDataString: string = "http://localhost:" + this.port + "/api/public/scheduleData";
   private GETreviewDataString: string = "http://localhost:" + this.port + "/api/get/reviews";
   private POSTreviewDataString: string = "http://localhost:" + this.port + "/api/reviews";
+  */
+  // demo routes
+
+  private GETCourseDataString: string = "" + this.port + "/api/courseData";
+  private POSTpublicScheduleDataString: string = "" + this.port + "/api/public/update-data";
+  private POSTprivateScheduleDataString: string = "" + this.port + "/api/user/update-data";
+  private GETPublicScheduleDataString: string = "" + this.port + "/api/public/scheduleData";
+  private GETreviewDataString: string = "" + this.port + "/api/get/reviews";
+  private POSTreviewDataString: string = "" + this.port + "/api/reviews";
 
   constructor(private http: HttpClient) {}
 
@@ -40,7 +50,7 @@ export class ConfigService {
     };
 
     getPrivateScheduleData(username): Observable<scheduleResponse[]> {  // observable type any?
-      let GETPrivateScheduleDataString: string = "http://localhost:" + this.port + "/api/" + username + "/scheduleData";
+      let GETPrivateScheduleDataString: string = "" + this.port + "/api/" + username + "/scheduleData";
       return this.http.get<any[]>(GETPrivateScheduleDataString);
     };
 

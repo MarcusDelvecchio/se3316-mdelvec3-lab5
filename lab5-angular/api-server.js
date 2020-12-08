@@ -28,6 +28,7 @@ const app = express();
 app.use(express.json());  // for parsing application/json objects passed in POST bodies
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json())
+app.use('/', express.static("static"));
 
 
 const port = 7000 || process.env.API_PORT;
