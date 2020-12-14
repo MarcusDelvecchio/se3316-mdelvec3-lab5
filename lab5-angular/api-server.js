@@ -81,7 +81,7 @@ const checkJwt = jwt({
       }
 }),
 audience: 'http://lab5-angular',
-issuer: 'https://dev-lrzuaei7.us.auth0.com/',
+issuer: 'https://dev-29yydtaj.us.auth0.com/',
 algorithms: ['RS256']
 });
 

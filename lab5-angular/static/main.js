@@ -30,7 +30,7 @@ webpackEmptyAsyncContext.id = "./$$_lazy_route_resource lazy recursive";
 /*! exports provided: domain, clientId, audience, apiUrl, default */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"domain\":\"dev-lrzuaei7.us.auth0.com\",\"clientId\":\"GXRiFyWhG56vQm3aaY6Z98Ru4UUj6VZd\",\"audience\":\"http://lab5-angular\",\"apiUrl\":\"http://localhost:7000\"}");
+module.exports = JSON.parse("{\"domain\":\"dev-29yydtaj.us.auth0.com\",\"clientId\":\"d4sVC4sjPvoU9d72lLh5rEJ6uk8qGvOn\",\"audience\":\"http://lab5-angular\",\"apiUrl\":\"http://ec2-52-201-211-232.compute-1.amazonaws.com:7000\"}");
 
 /***/ }),
 

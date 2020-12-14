@@ -1,6 +1,6 @@
 {
-  "domain": "dev-lrzuaei7.us.auth0.com",
-  "clientId": "GXRiFyWhG56vQm3aaY6Z98Ru4UUj6VZd",
+  "domain": "dev-29yydtaj.us.auth0.com",
+  "clientId": "d4sVC4sjPvoU9d72lLh5rEJ6uk8qGvOn",
   "audience": "http://lab5-angular",
-  "apiUrl": "http://localhost:7000"
+  "apiUrl": "http://ec2-52-201-211-232.compute-1.amazonaws.com:7000"
 }
